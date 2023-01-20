@@ -7,13 +7,15 @@ document.querySelector("#app").innerHTML = `
 <div>
   <div class='game__panel'>
     <div>
-      <span class="life">123</span>
+      <span class="life">❤️</span>
     </div>
     <ul class='words-list'></ul>
     <form>
       <fieldset>
         <input class="input" type="text" />
-        <button class='submit' type="submit">Enter</button>
+        <button class='submit' type="submit">
+          <img src='/enter-key.svg'/>
+        </button>
       </fieldset>
     </form>
   </div>
@@ -47,7 +49,7 @@ const start = (difficulty) => {
   document.querySelector("fieldset").disabled = false;
 };
 
-start(4);
+start(1);
 document
   .querySelector(".game-over__button")
   .addEventListener("click", () => start(3));

@@ -78,7 +78,7 @@ export function init(difficulty = 2, wordsList) {
   });
 
   const lifeSubscription = life$.subscribe((life) => {
-    $life.innerHTML = life;
+    $life.innerHTML = "❤️".repeat(life);
     if (life <= 0) {
       gameOver();
       return;
@@ -104,5 +104,5 @@ export function init(difficulty = 2, wordsList) {
 }
 
 function showGameOver() {
-  document.querySelector(".game-over__panel").classList.remove("play");
+  // document.querySelector(".game-over__panel").classList.remove("play");
 }
