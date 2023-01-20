@@ -85,6 +85,17 @@ button:focus-visible {
   font-size: 4rem;
 }
 
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.submit {
+  display: none;
+  /* visibility: hidden; */
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
