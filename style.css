@@ -13,11 +13,13 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --input-color: #097cfb;
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--input-color);
   text-decoration: inherit;
 }
 a:hover {
@@ -54,13 +56,6 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 
 .life {
@@ -129,6 +124,10 @@ fieldset {
 
 .input:focus {
   outline: none;
+}
+
+.typing {
+  outline: none;
   border-color: #097cfb;
   box-shadow: 0 0 6px #097cfb;
 }
@@ -140,6 +139,18 @@ fieldset {
   height: 100%;
   transform: translateY(-50%);
   padding: 0;
+  outline: none;
+  background: none;
+}
+
+.submit:active .enter {
+  transform: scale(0.95);
+  box-shadow: inset 3px 2px rgba(0, 0, 0, 0.24);
+}
+
+.active {
+  transform: scale(0.95);
+  box-shadow: inset 3px 2px rgba(0, 0, 0, 0.24);
 }
 
 @media (prefers-color-scheme: light) {

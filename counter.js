@@ -1,30 +1,11 @@
-import {
-  fromEvent,
-  BehaviorSubject,
-  tap,
-  interval,
-  switchMap,
-  timeInterval,
-  mergeMap,
-  map,
-  scan,
-  timestamp,
-  filter,
-  mergeScan,
-  of,
-  timeout,
-  startWith,
-  take,
-  timer,
-} from "rxjs";
-
-import { ajax } from "rxjs/ajax";
+import { fromEvent, BehaviorSubject, tap, interval, map, timer } from "rxjs";
 
 const difficultyMap = {
   1: [3000, 10000, 3],
   2: [2000, 7000, 3],
   3: [1500, 5000, 3],
-  4: [1500, 3000, 1],
+  4: [800, 4000, 2],
+  5: [600, 3500, 1],
 };
 
 export function init(difficulty = 2, wordsList) {
@@ -55,7 +36,7 @@ export function init(difficulty = 2, wordsList) {
 
   const input$ = fromEvent($form, "submit").pipe(
     tap((e) => e.preventDefault()),
-    map((x) => x?.target?.querySelector(".input")),
+    map((e) => e?.target?.querySelector(".input")),
     tap((x) => {
       const { value } = x;
       const words = words$.getValue();
@@ -104,5 +85,5 @@ export function init(difficulty = 2, wordsList) {
 }
 
 function showGameOver() {
-  // document.querySelector(".game-over__panel").classList.remove("play");
+  document.querySelector(".game-over__panel").classList.remove("play");
 }

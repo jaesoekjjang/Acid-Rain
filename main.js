@@ -1,7 +1,6 @@
 import "./style.css";
 import { init } from "./counter.js";
-import { map, tap } from "rxjs";
-import { ajax } from "rxjs/ajax";
+import("./keyboardControl");
 
 document.querySelector("#app").innerHTML = `
 <div>
@@ -14,7 +13,7 @@ document.querySelector("#app").innerHTML = `
       <fieldset>
         <input class="input" type="text" />
         <button class='submit' type="submit">
-          <img src='/enter-key.svg'/>
+          <img class='enter' src='/enter-key.svg'/>
         </button>
       </fieldset>
     </form>
@@ -42,14 +41,15 @@ const wordsList = (await loadText(WORDS_PATH))
   .split(/\s+/)
   .sort(() => Math.random() - 0.5);
 
-const start = (difficulty) => {
+// TODO start, over, restart 관련 따로 정리하기
+export const start = (difficulty) => {
   init(difficulty, wordsList);
   document.querySelector("form").reset();
   document.querySelector(".game-over__panel").classList.add("play");
   document.querySelector("fieldset").disabled = false;
 };
 
-start(1);
+start(4);
 document
   .querySelector(".game-over__button")
   .addEventListener("click", () => start(3));
