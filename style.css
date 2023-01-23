@@ -6,7 +6,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* background-color: #242424; */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -30,8 +30,12 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
   min-height: 100vh;
+  overflow: hidden;
+}
+
+canvas {
+  background: white;
 }
 
 h1 {
@@ -151,6 +155,11 @@ fieldset {
 .active {
   transform: scale(0.95);
   box-shadow: inset 3px 2px rgba(0, 0, 0, 0.24);
+}
+
+#app {
+  width: 100px;
+  height: 100px;
 }
 
 @media (prefers-color-scheme: light) {

@@ -21,7 +21,7 @@ export function init(difficulty = 2, wordsList) {
   const word$ = interval(INTERVAL).pipe(
     map((x) => wordsList[x]),
     tap((x) => {
-      words$.next({ ...words$.getValue(), [x]: x });
+      words$.next({ ...words$.getValue(), [x]: new WordDrop() });
       timer(TIME_LIMIT).subscribe(() => {
         const words = words$.getValue();
         if (x in words) {
@@ -51,12 +51,13 @@ export function init(difficulty = 2, wordsList) {
 
   const wordSubscription = word$.subscribe();
   const inputSubscription = input$.subscribe();
-  const wordsSubscription = words$.subscribe((words) => {
-    $words.innerHTML = Object.keys(words).reduce(
-      (acc, word) => acc + `<li>${word}</li>`,
-      ""
-    );
-  });
+  // const wordsSubscription = words$.subscribe((words) => {
+  // console.log(words);
+  // $words.innerHTML = Object.keys(words).reduce(
+  //   (acc, word) => acc + `<li>${word}</li>`,
+  //   ""
+  // );
+  // });
 
   const lifeSubscription = life$.subscribe((life) => {
     $life.innerHTML = "❤️".repeat(life);
@@ -79,9 +80,13 @@ export function init(difficulty = 2, wordsList) {
   subscriptions.push(
     wordSubscription,
     inputSubscription,
-    wordsSubscription,
+    // wordsSubscription,
     lifeSubscription
   );
+
+  function update() {
+    Object.values(words$.getValue()).forEach((wd) => wd.update());
+  }
 }
 
 function showGameOver() {

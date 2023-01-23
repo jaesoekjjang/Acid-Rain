@@ -7,8 +7,13 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="app">
-      <script type="module" src="/main.js"></script>
-    </div>
+    <canvas id="canvas"></canvas>
+    <div id="app"></div>
+
+    <script>
+      const canvas = document.querySelector("#canvas");
+      const ctx = canvas.getContext("2d");
+    </script>
+    <script type="module" src="/main.js"></script>
   </body>
 </html>

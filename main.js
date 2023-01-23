@@ -1,5 +1,6 @@
 import "./style.css";
 import { init } from "./counter.js";
+import { Game } from "./Renderer";
 import("./keyboardControl");
 
 document.querySelector("#app").innerHTML = `
@@ -9,7 +10,7 @@ document.querySelector("#app").innerHTML = `
       <span class="life">❤️</span>
     </div>
     <ul class='words-list'></ul>
-    <form>
+    <form class='form'>
       <fieldset>
         <input class="input" type="text" />
         <button class='submit' type="submit">
@@ -37,19 +38,13 @@ const loadText = async (path) => {
   const text = await (await fetch(path)).text();
   return text;
 };
-const wordsList = (await loadText(WORDS_PATH))
-  .split(/\s+/)
-  .sort(() => Math.random() - 0.5);
+const words = (await loadText(WORDS_PATH)).split(/\s+/);
 
-// TODO start, over, restart 관련 따로 정리하기
-export const start = (difficulty) => {
-  init(difficulty, wordsList);
-  document.querySelector("form").reset();
-  document.querySelector(".game-over__panel").classList.add("play");
-  document.querySelector("fieldset").disabled = false;
-};
+const $canvas = document.querySelector("#canvas");
+const $form = document.querySelector(".form");
+const $life = document.querySelector(".life");
 
-start(4);
-document
-  .querySelector(".game-over__button")
-  .addEventListener("click", () => start(3));
+const game = new Game({ $canvas, $form, $life });
+
+game.init(words);
+game.start(2);
