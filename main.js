@@ -25,7 +25,7 @@ document.querySelector("#app").innerHTML = `
     </div>
     <div>
       <button class='game-over__button'>
-      <span>Play Again</span>
+      <span class='restart'>Play Again</span>
       </button>
     </div>
   </div>
@@ -47,4 +47,7 @@ const $life = document.querySelector(".life");
 const game = new Game({ $canvas, $form, $life });
 
 game.init(words);
-game.start(2);
+game.start(3);
+
+const $restart = document.querySelector(".restart");
+$restart.addEventListener("click", () => game.restart(3));
