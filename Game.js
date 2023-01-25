@@ -1,14 +1,16 @@
-import {
-  fromEvent,
-  BehaviorSubject,
-  tap,
-  interval,
-  map,
-  timer,
-  take,
-} from "rxjs";
+import { fromEvent, BehaviorSubject, tap, interval, map } from "rxjs";
+import { WordDrops } from "./WordDrops";
+import { WordDrop } from "./WordDrop";
 
 export function Game({ $canvas, $form, $life }) {
+  if (new.target) {
+    if (Game._instance === null) {
+      Game._instance = this;
+    } else {
+      throw new TypeError("둘 이상의 Game 인스턴스를 생성할 수 없습니다.");
+    }
+  }
+
   this.canvas = $canvas;
   $canvas.width = document.body.clientWidth;
   $canvas.height = document.body.clientHeight;
@@ -23,6 +25,8 @@ export function Game({ $canvas, $form, $life }) {
 
   this.words$;
   this.life$;
+  this.interval$;
+  this.submit$;
 
   this.subscriptions = [];
 
@@ -45,23 +49,21 @@ export function Game({ $canvas, $form, $life }) {
     this.wordsList.sort(() => Math.random() - 0.5);
     const [INTERVAL, MIN_SPEED, MAX_SPEED, MAX_LIFE] =
       this.difficultyMap[difficulty];
-    this.words$ = new BehaviorSubject({});
+    this.words = new WordDrops();
     this.life$ = new BehaviorSubject(MAX_LIFE);
 
-    // words$.subscribe(() => (this.words = words$.getValue()));
-
     const interval$ = interval(INTERVAL).pipe(
-      map((n) => ({ n, word: this.wordsList[n] })),
-      tap(({ n, word }) => {
+      map((n) => ({ n, text: this.wordsList[n] })),
+      tap(({ n, text }) => {
         //TODO x좌표의 16을 변수로 바꾸기
-        this.words$.next({
-          ...this.words$.getValue(),
-          [word]: new WordDrop({
-            word,
-            speed: this.speed(MIN_SPEED, MAX_SPEED, n),
-            x: Math.random() * (this.canvas.width - word.length * 16),
-          }),
-        });
+        this.words.add(
+          text,
+          new WordDrop({
+            text,
+            speed: WordDrop.speed(MIN_SPEED, MAX_SPEED, n),
+            x: Math.random() * (this.canvas.width - text.length * 16),
+          })
+        );
       })
     );
 
@@ -69,13 +71,8 @@ export function Game({ $canvas, $form, $life }) {
       tap((e) => e.preventDefault()),
       map((e) => e?.target?.querySelector(".input")),
       tap((x) => {
-        const { value } = x;
-        const words = this.words$.getValue();
-        if (value in words) {
-          const copy = { ...words };
-          delete copy[value];
-          this.words$.next(copy);
-        }
+        const { value: text } = x;
+        this.words.remove(text);
         $form.reset();
       })
     );
@@ -100,12 +97,6 @@ export function Game({ $canvas, $form, $life }) {
     this.render();
   };
 
-  //TODO WordDrop의 static 메소드로 변경
-  Game.prototype.speed = function (minSpeed, maxSpeed, n) {
-    const speed = Math.random() + minSpeed * 1.02 ** n;
-    return speed > maxSpeed ? maxSpeed : speed;
-  };
-
   Game.prototype.render = function () {
     const loop = () => {
       if (!this.animationPlaying) return;
@@ -115,58 +106,40 @@ export function Game({ $canvas, $form, $life }) {
         this.canvas.clientWidth,
         this.canvas.clientHeight
       );
-      Object.values(this.words$.getValue()).forEach((obj) =>
-        obj.draw(this.ctx)
-      );
-      Object.values(this.words$.getValue()).forEach((obj) =>
-        obj.update(this.canvas, this.words$, this.life$)
-      );
+
+      this.words.draw(this.ctx);
+      this.words.update(this.canvas, this.life$);
 
       this.animation = requestAnimationFrame(loop);
     };
 
     this.animation = requestAnimationFrame(loop);
   };
-
-  Game.prototype.gameOver = function () {
-    this.end();
-    document.querySelector(".game-over__panel").classList.remove("play");
-  };
-
-  Game.prototype.end = function () {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-    document.querySelector("fieldset").disabled = true;
-    this.animationPlaying = false;
-    cancelAnimationFrame(this.animation);
-  };
-
-  Game.prototype.restart = function () {
-    document.querySelector("fieldset").disabled = false;
-    document.querySelector(".game-over__panel").classList.add("play");
-    this.start();
-  };
 }
 
-function WordDrop({ word, speed, x }) {
-  this.word = word;
-  this.speed = speed;
-  this.x = x;
-  this.y = 0;
+Game._instance = null;
 
-  WordDrop.prototype.update = function (canvas, words$, life$) {
-    this.y += this.speed;
+Game.getInstance = function () {
+  if (Game._instance === null) {
+    Game._instance = new Game();
+  }
+  return Game._instance;
+};
 
-    if (this.y <= canvas.height) return;
+Game.prototype.gameOver = function () {
+  this.end();
+  document.querySelector(".game-over__panel").classList.remove("play");
+};
 
-    const words = words$.getValue();
-    const copy = { ...words };
-    delete copy[this.word];
-    words$.next(copy);
+Game.prototype.end = function () {
+  this.subscriptions.forEach((s) => s.unsubscribe());
+  document.querySelector("fieldset").disabled = true;
+  this.animationPlaying = false;
+  cancelAnimationFrame(this.animation);
+};
 
-    life$.next(life$.getValue() - 1);
-  };
-
-  WordDrop.prototype.draw = function (context) {
-    context.fillText(this.word, this.x, this.y);
-  };
-}
+Game.prototype.restart = function () {
+  document.querySelector("fieldset").disabled = false;
+  document.querySelector(".game-over__panel").classList.add("play");
+  this.start();
+};

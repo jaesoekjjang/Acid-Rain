@@ -3,7 +3,7 @@ import { fromEvent, map, switchMap, tap, timer } from "rxjs";
 const keydown = (element) =>
   fromEvent(element, "keydown").pipe(map((e) => e.key));
 const keyup = (element) => fromEvent(element, "keyup").pipe(map((e) => e.key));
-
+  
 const enterButton$ = document.querySelector(".enter");
 const input$ = document.querySelector(".input");
 

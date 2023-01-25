@@ -1,6 +1,5 @@
 import "./style.css";
-import { init } from "./counter.js";
-import { Game } from "./Renderer";
+import { Game } from "./Game";
 import("./keyboardControl");
 
 document.querySelector("#app").innerHTML = `
@@ -45,9 +44,8 @@ const $form = document.querySelector(".form");
 const $life = document.querySelector(".life");
 
 const game = new Game({ $canvas, $form, $life });
-
 game.init(words);
 game.start(3);
 
-const $restart = document.querySelector(".restart");
-$restart.addEventListener("click", () => game.restart(3));
+// const $restart = document.querySelector(".restart");
+// $restart.addEventListener("click", () => game.restart(3));
