@@ -1,4 +1,4 @@
-import mysql from "mysql2";
+import mysql from "mysql2/promise";
 
 export default async () => {
   const { HOST, USER, PASSWORD, DATABASE } = process.env;

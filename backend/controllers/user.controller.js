@@ -1,25 +1,26 @@
 import { Router } from "express";
-import { check } from "express-validator";
+import { body } from "express-validator";
 import { onValidationError } from "../middleware/index.js";
 
-export const route = Router();
+export const userRouter = (UserService) => {
+  const router = Router();
 
-route.get("/", (req, res, next) => {
-  console.log(req);
-  res.send(req.body);
-});
+  router.get("/", async (req, res, next) => {
+    const user = await UserService.findByName("재석");
 
-route.post(
-  "/",
-  [check("name").isAlpha(), onValidationError(console.error)],
-  async (req, res, next) => {
-    const userDTO = req.body;
-    return res.send(userDTO);
-    // const oldUser = await UserService.findUser(userDTO);
-    // if (oldUser) next(); //이미 있는 유저
+    return res.json(user);
+  });
 
-    // const newUser = await UserService.create(userDTO);
+  router.post(
+    "/",
+    [body("name").isAlphanumeric().isLength({ min: 2 }), onValidationError()],
+    async (req, res, next) => {
+      const { name } = req.body;
+      const newUser = await UserService.create(name);
 
-    // return res.json(newUser);
-  }
-);
+      return res.json(newUser);
+    }
+  );
+
+  return router;
+};
