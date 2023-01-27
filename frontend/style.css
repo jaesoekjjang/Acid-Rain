@@ -100,7 +100,7 @@ ul {
   list-style: none;
 }
 
-form {
+.game-form {
   position: absolute;
   bottom: 50px;
   left: 50%;
@@ -109,7 +109,7 @@ form {
   transform: translate(-50%);
 }
 
-fieldset {
+.game-fieldset {
   border: none;
   margin: 0;
   width: 100%;
@@ -160,6 +160,21 @@ fieldset {
 #app {
   width: 100px;
   height: 100px;
+}
+
+.modal {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: black;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
 }
 
 @media (prefers-color-scheme: light) {

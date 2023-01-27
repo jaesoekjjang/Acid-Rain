@@ -1,7 +1,8 @@
 import express from "express";
+import cors from "cors";
+import "./env.js";
 import loader from "./loaders/index.js";
 import { userRouter } from "./controllers/user.controller.js";
-import "./env.js";
 import { UserService } from "./services/user.service.js";
 import { gameRouter } from "./controllers/game.controller.js";
 import { GameService } from "./services/game.service.js";
@@ -18,6 +19,11 @@ const services = {
   GameService: new GameService(),
 };
 
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 app.use("/user", userRouter(services.UserService));
 app.use("/game/", gameRouter(services.GameService, services.UserService));
 

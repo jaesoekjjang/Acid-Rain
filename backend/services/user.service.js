@@ -15,7 +15,8 @@ export class UserService {
       const [rows] = await mysqlPool.execute(
         `select * from user where name='${name}'`
       );
-      return rows[0];
+
+      return rows.length ? rows[0] : { id: -1, name: "" };
     } catch (err) {
       console.error(err);
     }

@@ -8,7 +8,8 @@ export class GameService {
   async save({ userId, score }) {
     try {
       const [row] = await mysqlPool.execute(
-        `insert into game(user_id, score) values(${userId}, ${score})`
+        `insert into game(user_id, score)
+          values(${userId}, ${score})`
       );
       return "" + row.insertId;
     } catch (err) {
@@ -20,7 +21,13 @@ export class GameService {
   async getRanking(n = 100) {
     try {
       const [rows] = await mysqlPool.execute(
-        `select * from game order by score limit=${n}'`
+        `select g.score, u.name
+          from game g 
+            inner join user u
+              on g.user_id = u.id
+        where g.score > 0
+        order by score desc 
+        limit ${n}`
       );
       return rows;
     } catch (err) {
