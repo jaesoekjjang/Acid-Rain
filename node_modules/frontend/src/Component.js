@@ -3,25 +3,30 @@ import { BehaviorSubject, fromEvent } from "rxjs";
 export class Component {
   #eventSubscriptions;
   #components;
+  #state;
 
   /**
-   * @param {HTMLElement} $target - 컴포넌트의 컨테이너
+   * @param {HTMLElement} $parent - 컴포넌트의 컨테이너
+   * @param {string} tag - 컴포넌트 최상위 노드의 태그명
    * @param {any} initialState
+   * @example App(document.querySelector('#app'), {tag: 'div', class: 'header'}, {count: 0})
    */
-  constructor($parent, tag, initialState) {
+  constructor($parent, { tag = "div", attrs = {} }, initialState) {
     if (new.target.prototype.constructor === Component) {
       throw new Error("추상 클래스를 인스턴스화 할 수 없습니다.");
     }
     this.$target = document.createElement(tag);
     $parent.appendChild(this.$target);
     this.$parent = $parent;
-    this.state = new BehaviorSubject(initialState ?? {});
+    this.attrs = attrs;
+
+    this.#state = new BehaviorSubject(initialState ?? {});
 
     this.addComponents();
 
-    this.state.subscribe((state) => {
+    this.#state.subscribe((state) => {
       this.render.call(this);
-      this.components.forEach((comp) => {
+      this.#components.forEach((comp) => {
         if (!(comp instanceof Component))
           throw Error("addComponent()에는 컴포넌트만 등록할 수 있습니다");
         comp.render();
@@ -33,23 +38,24 @@ export class Component {
   }
 
   render() {
-    this.$target.innerHTML = this.template(this.state.getValue());
+    this.$target.innerHTML = this.template(this.#state.getValue());
+    Object.keys(this.attrs).forEach((key) => {
+      this.$target.setAttribute(key, this.attrs[key]);
+    });
   }
 
   /**
    * @param  {...any} components
    */
   addComponents(components = []) {
-    this.components = Array.isArray(components) ? components : [components];
+    this.#components = Array.isArray(components) ? components : [components];
   }
 
   /**
    * @param {any} state
    */
   template(state) {
-    // throw new Error(
-    //   "Component의 서브 클래스는 template 메소드를 구현해야 합니다."
-    // );
+    return null;
   }
 
   onMount() {}
@@ -61,7 +67,23 @@ export class Component {
   addEvent() {}
 
   unMount() {
-    this.eventSubscriptions.forEach((sub) => sub.unSubscribe());
+    this.#eventSubscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  getState(key) {
+    return this.#state.getValue()[key];
+  }
+
+  getStates(...keys) {
+    let res = {};
+    for (let key of keys) {
+      Object.assign(res, { [key]: this.#state.getValue()[key] });
+    }
+    return res;
+  }
+
+  setState(key, value) {
+    this.#state.next({ ...this.#state.getValue(), [key]: value });
   }
 
   //! addEvent가 실행되면 그 결과를 subscription에 넣는 함수

@@ -27,7 +27,6 @@ keyup(document)
   )
   .subscribe();
 
-// // 1.5초 동안 타이핑 하지 않으면 input에 'typing' 클래스 부여. => border 스타일 변경
 fromEvent(input$, "keydown")
   .pipe(
     switchMap(() => {

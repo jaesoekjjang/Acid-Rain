@@ -1,12 +1,12 @@
 import { fromEvent } from "rxjs";
-import { filter, map, mergeMap, share, tap } from "rxjs/operators";
+import { filter, map, mergeMap, share } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import { Component } from "../Component.js";
 
 export class Modal extends Component {
-  template({ props, ranking }) {
+  template({ isPlaying, ranking }) {
     return (
-      props.isPlaying() &&
+      isPlaying() &&
       `
       <div class='modal'>
         <form class='modal-form'>
@@ -74,16 +74,16 @@ export class Modal extends Component {
           })
         )
       )
-      .subscribe(({ response }) =>
-        this.state.next({ ...this.state.getValue(), ranking: response })
-      );
+      .subscribe(({ response }) => this.setState("ranking", response));
 
     const onClickRestart = clickModal
       .pipe(filter((x) => x.target.classList.contains("restart")))
       .subscribe(() => {
-        const {
-          props: { isPlaying, setIsPlaying },
-        } = this.state.getValue();
+        const { isPlaying, setIsPlaying } = this.getStates(
+          "isPlaying",
+          "setIsPlaying"
+        );
+
         setIsPlaying(!isPlaying());
       });
 

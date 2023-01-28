@@ -1,16 +1,11 @@
 import { Component } from "../Component";
 import { Game } from "../models/Game";
+import { loadText } from "../utils";
 
-const WORDS_PATH = "/words_list.txt";
-
-const loadText = async (path) => {
-  const text = await (await fetch(path)).text();
-  return text;
-};
-const words = (await loadText(WORDS_PATH)).split(/\s+/);
+const text = (await loadText(import.meta.env.VITE_WORDS_PATH)).split(/\s+/);
 
 export class GamePanel extends Component {
-  template(state) {
+  template() {
     return `
     <div class='game__panel'>
       <div>
@@ -35,7 +30,7 @@ export class GamePanel extends Component {
     const $life = document.querySelector(".life");
 
     const game = new Game({ $canvas, $form, $life });
-    game.init(words);
+    game.init(text);
     game.start(3);
   }
 }

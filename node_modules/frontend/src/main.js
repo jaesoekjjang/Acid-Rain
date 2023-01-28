@@ -1,25 +1,32 @@
 import "../style.css";
 import { Modal } from "./component/Modal";
 import { Component } from "./Component";
-import { fromEvent } from "rxjs";
 import { GamePanel } from "./component/GamePanel";
 
 new (class App extends Component {
   onMount() {
     import("./keyboardControl");
-    const app = document.querySelector("#app");
+
+    const container = document.querySelector(".container");
 
     // TODO props 함수 추상화 하기
-    const modal = new Modal(app, "div", {
-      props: {
-        isPlaying: () => this.state.getValue().isPlaying,
-        setIsPlaying: (isPlaying) =>
-          this.state.next({ ...this.state.getValue(), isPlaying }),
-      },
-      ranking: [],
-    });
+    const modal = new Modal(
+      container,
+      { tag: "div" },
+      {
+        isPlaying: () => this.getState("isPlaying"),
+        setIsPlaying: (value) => this.setState("isPlaying", value),
+        ranking: [],
+      }
+    );
 
-    const gamePanel = new GamePanel(app, "div");
+    const gamePanel = new GamePanel(container, {
+      tag: "div",
+    });
     this.addComponents([gamePanel, modal]);
   }
-})(document.querySelector("#app"), "div", { isPlaying: true });
+})(
+  document.querySelector("#app"),
+  { tag: "div", attrs: { class: "container" } },
+  { isPlaying: true }
+);
