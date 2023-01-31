@@ -57,7 +57,7 @@ class App extends Component {
     game.init({ wordList, onGameStart, onGameOver });
 
     //TODO 난이도 설정 UI
-    game.setDifficulty(5);
+    game.setDifficulty(4);
     game.start();
   }
 }

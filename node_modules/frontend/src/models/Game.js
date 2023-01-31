@@ -34,8 +34,9 @@ export function Game({ $canvas, $form, $life }) {
   this.$form = $form;
   this.$life = $life;
 
-  this.words = new WordDrops();
   this.life$ = new BehaviorSubject(3);
+  this.score$ = new BehaviorSubject(0);
+  this.words = new WordDrops();
   this.interval$;
   this.submit$;
 
@@ -66,7 +67,7 @@ export function Game({ $canvas, $form, $life }) {
       tap((e) => e.preventDefault()),
       map((e) => e?.target?.querySelector(".input")),
       tap(({ value: text }) => {
-        this.words.remove(text);
+        this.score$.next(this.score$.getValue() + this.words.getScore(text));
         $form.reset();
       })
     );
@@ -82,7 +83,9 @@ export function Game({ $canvas, $form, $life }) {
   Game.prototype.start = function () {
     this.onGameStart();
     this.wordList.sort(() => Math.random() - 0.5);
+
     this.life$.next(3);
+    this.score$.next(0);
 
     const intervalSubscription = this.interval$.subscribe();
     const submitSubscription = this.submit$.subscribe();
@@ -93,11 +96,16 @@ export function Game({ $canvas, $form, $life }) {
         return;
       }
     });
+    const scoreSubscription = this.score$.subscribe((score) => {
+      document.querySelector(".score").innerHTML = score;
+      console.log(document.querySelector(".score"));
+    });
 
     this.subscriptions.push(
       intervalSubscription,
       submitSubscription,
-      lifeSubscription
+      lifeSubscription,
+      scoreSubscription
     );
 
     this.animationPlaying = true;

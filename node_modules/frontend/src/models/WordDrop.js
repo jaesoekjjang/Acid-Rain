@@ -25,6 +25,10 @@ WordDrop.x = function (textLength) {
   return Math.random() * (canvas.width - textLength * fontSize);
 };
 
+WordDrop.prototype.getScore = function () {
+  return this.speed * 20 + this.text.length * 15 + 15 * 1.1 ** WordDrop.count;
+};
+
 WordDrop.prototype.draw = function (ctx) {
   ctx.fillText(this.text, this.x, this.y);
 };
@@ -32,7 +36,7 @@ WordDrop.prototype.draw = function (ctx) {
 WordDrop.prototype.update = function (canvas, words$, life$) {
   this.y += this.speed;
 
-  if (this.y <= canvas.height) return;
+  if (this.y <= canvas.height + WordDrop.fontSize) return;
 
   const words = words$.getValue();
   const copy = { ...words };

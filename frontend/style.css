@@ -55,10 +55,12 @@ button {
   transition: border-color 0.25s;
 }
 
-.life {
+.status {
   position: absolute;
-  right: 0;
+  right: 1rem;
   top: 0;
+  display: flex;
+  gap: 1rem;
   width: 50px;
   height: 50px;
   white-space: nowrap;
@@ -180,6 +182,7 @@ hr {
   left: 50%;
   transform: translate(-50%, -50%);
   background: black;
+  color: white;
   width: 300px;
   height: 300px;
   display: flex;

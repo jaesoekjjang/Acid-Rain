@@ -11,12 +11,26 @@ WordDrops.prototype.add = function (key, value) {
 };
 
 WordDrops.prototype.remove = function (key) {
-  const oldValue = this._drops.getValue();
-  if (!oldValue.hasOwnProperty(key)) return;
-
-  const newValue = { ...oldValue };
+  const newValue = { ...this._drops.getValue() };
   delete newValue[key];
   this._drops.next(newValue);
+};
+
+WordDrops.prototype.has = function (key) {
+  const oldValue = this._drops.getValue();
+  if (oldValue.hasOwnProperty(key)) return true;
+
+  return false;
+};
+
+WordDrops.prototype.getScore = function (key) {
+  if (!this.has(key)) return 0;
+
+  const wordDrop = this._drops.getValue()[key];
+  const score = wordDrop.getScore();
+  this.remove(key);
+
+  return Math.ceil(score);
 };
 
 WordDrops.prototype.draw = function (ctx) {

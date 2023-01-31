@@ -5,7 +5,8 @@ export class GamePanel extends MemoComponent {
   template() {
     return `
     <div class='game__panel'>
-      <div>
+      <div class='status'>
+        <span class="score">0</span>
         <span class="life">❤️</span>
       </div>
       <ul class='words-list'></ul>
@@ -20,6 +21,4 @@ export class GamePanel extends MemoComponent {
     </div>
     `;
   }
-
-  onMount() {}
 }
