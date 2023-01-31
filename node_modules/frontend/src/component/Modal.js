@@ -5,9 +5,9 @@ import { Component } from "../Component.js";
 
 export class Modal extends Component {
   template({ isPlaying, ranking }) {
-    return (
-      isPlaying() &&
-      `
+    return isPlaying()
+      ? ""
+      : `
       <div class='modal'>
         <form class='modal-form'>
           <div>
@@ -40,8 +40,7 @@ export class Modal extends Component {
         </div>
       </div>
       </div>
-  `
-    );
+  `;
   }
 
   addEvent() {
@@ -79,12 +78,14 @@ export class Modal extends Component {
     const onClickRestart = clickModal
       .pipe(filter((x) => x.target.classList.contains("restart")))
       .subscribe(() => {
-        const { isPlaying, setIsPlaying } = this.getStates(
+        const { isPlaying, setIsPlaying, game } = this.getStates(
           "isPlaying",
-          "setIsPlaying"
+          "setIsPlaying",
+          "game"
         );
 
         setIsPlaying(!isPlaying());
+        game.restart();
       });
 
     return [onClickRegister, onClickRaking, onClickRestart];

@@ -1,6 +1,6 @@
 import { fromEvent, BehaviorSubject, tap, interval, map } from "rxjs";
-import { WordDrops } from "./WordDrops";
 import { WordDrop } from "./WordDrop";
+import { WordDrops } from "./WordDrops";
 
 export function Game({ $canvas, $form, $life }) {
   if (new.target) {
@@ -16,63 +16,53 @@ export function Game({ $canvas, $form, $life }) {
   $canvas.height = document.body.clientHeight;
   this.ctx = $canvas.getContext("2d");
 
+  this.onGameStart;
+  this.onGameOver;
+
   this.animation;
   this.animationPlaying = false;
 
+  // [interval, minSpeed, maxSpeed]
+  this.difficultyMap = {
+    1: [3000, 1, 6],
+    2: [2000, 2, 7.5],
+    3: [1500, 2.5, 9],
+    4: [1000, 3, 10],
+    5: [800, 5, 12],
+  };
+
   this.$form = $form;
   this.$life = $life;
-  this.$input = $form.querySelector("input");
 
-  this.words$;
-  this.life$;
+  this.words = new WordDrops();
+  this.life$ = new BehaviorSubject(3);
   this.interval$;
   this.submit$;
 
   this.subscriptions = [];
 
-  // difficultyMap: {[difficulty]: [interval, minSpeed, maxSpeed, maxLife]}
-  Game.prototype.init = function (
-    words,
-    difficulty = 2,
-    difficultyMap,
-    fontSize = 16
-  ) {
-    this.wordsList = words;
-    this.difficulty = difficulty;
-    this.difficultyMap = difficultyMap || {
-      1: [3000, 1, 6, 3],
-      2: [2000, 2, 7.5, 3],
-      3: [1500, 2.5, 9, 3],
-      4: [1000, 3, 10, 2],
-      5: [800, 5, 12, 1],
-    };
+  Game.prototype.init = function ({
+    wordList,
+    fontSize = 16,
+    onGameStart,
+    onGameOver,
+  }) {
+    this.wordList = wordList;
     this.ctx.font = `${fontSize}px Verdana`;
 
-    const [, minSpeed, maxSpeed, maxLife] = this.difficultyMap[difficulty];
-
-    WordDrop.init({
-      canvasWidth: this.canvas.width,
-      minSpeed,
-      maxSpeed,
-      fontSize,
-    });
+    this.onGameStart = onGameStart;
+    this.onGameOver = onGameOver;
   };
 
-  Game.prototype.start = function (difficulty = 2) {
-    this.$input.focus();
+  Game.prototype.setDifficulty = function (difficulty = 3) {
+    const [INTERVAL, minSpeed, maxSpeed] = this.difficultyMap[difficulty];
 
-    this.wordsList.sort(() => Math.random() - 0.5);
-    const [INTERVAL, MIN_SPEED, MAX_SPEED, MAX_LIFE] =
-      this.difficultyMap[difficulty];
-    this.words = new WordDrops();
-    this.life$ = new BehaviorSubject(MAX_LIFE);
-
-    const interval$ = interval(INTERVAL).pipe(
-      map((n) => this.wordsList[n]),
+    this.interval$ = interval(INTERVAL).pipe(
+      map((n) => this.wordList[n]),
       tap((text) => this.words.add(text, new WordDrop(text)))
     );
 
-    const submit$ = fromEvent($form, "submit").pipe(
+    this.submit$ = fromEvent($form, "submit").pipe(
       tap((e) => e.preventDefault()),
       map((e) => e?.target?.querySelector(".input")),
       tap(({ value: text }) => {
@@ -81,8 +71,21 @@ export function Game({ $canvas, $form, $life }) {
       })
     );
 
-    const intervalSubscription = interval$.subscribe();
-    const submitSubscription = submit$.subscribe();
+    WordDrop.init({
+      canvas: this.canvas,
+      minSpeed,
+      maxSpeed,
+      fontSize: 16,
+    });
+  };
+
+  Game.prototype.start = function () {
+    this.onGameStart();
+    this.wordList.sort(() => Math.random() - 0.5);
+    this.life$.next(3);
+
+    const intervalSubscription = this.interval$.subscribe();
+    const submitSubscription = this.submit$.subscribe();
     const lifeSubscription = this.life$.subscribe((life) => {
       $life.innerHTML = "❤️".repeat(life);
       if (life <= 0) {
@@ -132,18 +135,16 @@ Game.getInstance = function () {
 
 Game.prototype.gameOver = function () {
   this.end();
-  document.querySelector(".game-over__panel").classList.remove("play");
+  this.onGameOver();
 };
 
 Game.prototype.end = function () {
-  this.subscriptions.forEach((s) => s.unsubscribe());
-  document.querySelector("fieldset").disabled = true;
   this.animationPlaying = false;
   cancelAnimationFrame(this.animation);
+  this.subscriptions.forEach((s) => s.unsubscribe());
+  this.words.clear();
 };
 
 Game.prototype.restart = function () {
-  document.querySelector("fieldset").disabled = false;
-  document.querySelector(".game-over__panel").classList.add("play");
   this.start();
 };

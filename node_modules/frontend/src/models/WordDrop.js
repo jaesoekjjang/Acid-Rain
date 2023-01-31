@@ -1,14 +1,14 @@
 export function WordDrop(text) {
   this.text = text;
-  this.speed = WordDrop.speed(WordDrop.count++);
+  this.speed = WordDrop.speed(WordDrop.count);
   this.x = WordDrop.x(text.length);
   this.y = 0;
 }
 
 WordDrop.count = 0;
 
-WordDrop.init = function ({ canvasWidth, minSpeed, maxSpeed, fontSize }) {
-  WordDrop.canvasWidth = canvasWidth;
+WordDrop.init = function ({ canvas, minSpeed, maxSpeed, fontSize }) {
+  WordDrop.canvas = canvas;
   WordDrop.minSpeed = minSpeed;
   WordDrop.maxSpeed = maxSpeed;
   WordDrop.fontSize = fontSize;
@@ -21,8 +21,8 @@ WordDrop.speed = function (n) {
 };
 
 WordDrop.x = function (textLength) {
-  const { canvasWidth, fontSize } = WordDrop;
-  return Math.random() * (canvasWidth - textLength * fontSize);
+  const { canvas, fontSize } = WordDrop;
+  return Math.random() * (canvas.width - textLength * fontSize);
 };
 
 WordDrop.prototype.draw = function (ctx) {

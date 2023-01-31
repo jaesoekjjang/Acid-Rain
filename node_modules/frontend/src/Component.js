@@ -1,14 +1,24 @@
-import { BehaviorSubject, fromEvent } from "rxjs";
+import {
+  BehaviorSubject,
+  filter,
+  fromEvent,
+  map,
+  pairwise,
+  skip,
+  tap,
+} from "rxjs";
 
 export class Component {
   #eventSubscriptions;
   #components;
   #state;
-
+  #pairState;
   /**
    * @param {HTMLElement} $parent - 컴포넌트의 컨테이너
-   * @param {string} tag - 컴포넌트 최상위 노드의 태그명
-   * @param {any} initialState
+   * @param {Object} target - 컨테이너 바로 아래 최상위 노드
+   * @param {string} target.tag - target의 태그명
+   * @param {string} target.attrs - target의 속성
+   * @param {{[string]: any}} initialState - {키: 밸류} 형식의 객체만 전달 가능합니다. 여기서의 키 값을 getState(), setState() 메서드에 전달해 상태를 조회, 수정할 수 있습니다.
    * @example App(document.querySelector('#app'), {tag: 'div', class: 'header'}, {count: 0})
    */
   constructor($parent, { tag = "div", attrs = {} }, initialState) {
@@ -21,34 +31,42 @@ export class Component {
     this.attrs = attrs;
 
     this.#state = new BehaviorSubject(initialState ?? {});
+    this.#pairState = this.#state.pipe(pairwise());
 
     this.addComponents();
 
-    this.#state.subscribe((state) => {
-      this.render.call(this);
-      this.#components.forEach((comp) => {
-        if (!(comp instanceof Component))
-          throw Error("addComponent()에는 컴포넌트만 등록할 수 있습니다");
-        comp.render();
+    this.render.call(this);
+
+    this.#pairState
+      .pipe(
+        filter(([prev, cur]) => prev != cur),
+        map(([, cur]) => cur)
+      )
+      .subscribe(() => {
+        this.render.call(this);
+        this.#components.forEach((comp) => {
+          comp.render();
+        });
       });
-    });
 
     this.onMount();
     this.#eventSubscriptions = this.addEvent();
   }
 
+  /**
+   * @param  {Component[]} components
+   */
+  addComponents(components = []) {
+    this.#components = Array.isArray(components) ? components : [components];
+  }
+
   render() {
+    //! App 컴포넌트가 없어짐. template에서 컴포넌트를 생성하도록, 또는 render 함수를 다시 작성
+    this.$parent.appendChild(this.$target);
     this.$target.innerHTML = this.template(this.#state.getValue());
     Object.keys(this.attrs).forEach((key) => {
       this.$target.setAttribute(key, this.attrs[key]);
     });
-  }
-
-  /**
-   * @param  {...any} components
-   */
-  addComponents(components = []) {
-    this.#components = Array.isArray(components) ? components : [components];
   }
 
   /**
@@ -66,10 +84,6 @@ export class Component {
    */
   addEvent() {}
 
-  unMount() {
-    this.#eventSubscriptions.forEach((sub) => sub.unsubscribe());
-  }
-
   getState(key) {
     return this.#state.getValue()[key];
   }
@@ -86,11 +100,20 @@ export class Component {
     this.#state.next({ ...this.#state.getValue(), [key]: value });
   }
 
-  //! addEvent가 실행되면 그 결과를 subscription에 넣는 함수
+  // HTMLElement를 상속 받으면 가능할듯??
+  unMount() {
+    this.#eventSubscriptions.forEach((sub) => sub.unsubscribe());
+  }
+}
 
-  // beforeUpdate() {}
-
-  // afterUpdate() {}
+export class MemoComponent extends Component {
+  render() {
+    if (this.memo) {
+      return this.$parent.appendChild(this.$target);
+    }
+    super.render();
+    this.memo = this.$target.innerHTML;
+  }
 }
 
 // export function Component($target, initialState) {}

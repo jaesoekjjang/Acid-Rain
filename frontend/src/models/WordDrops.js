@@ -1,4 +1,5 @@
 import { BehaviorSubject } from "rxjs";
+import { WordDrop } from "./WordDrop";
 
 export function WordDrops() {
   this._drops = new BehaviorSubject({});
@@ -6,6 +7,7 @@ export function WordDrops() {
 
 WordDrops.prototype.add = function (key, value) {
   this._drops.next({ ...this._drops.getValue(), [key]: value });
+  WordDrop.count += 1;
 };
 
 WordDrops.prototype.remove = function (key) {
@@ -29,4 +31,5 @@ WordDrops.prototype.update = function (canvas, life$) {
 
 WordDrops.prototype.clear = function () {
   this._drops.next({});
+  WordDrop.count = 0;
 };

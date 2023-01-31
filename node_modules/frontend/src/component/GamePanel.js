@@ -1,10 +1,7 @@
-import { Component } from "../Component";
-import { Game } from "../models/Game";
-import { loadText } from "../utils";
+import { MemoComponent } from "../Component";
+import("../keyboardControl");
 
-const text = (await loadText(import.meta.env.VITE_WORDS_PATH)).split(/\s+/);
-
-export class GamePanel extends Component {
+export class GamePanel extends MemoComponent {
   template() {
     return `
     <div class='game__panel'>
@@ -24,13 +21,5 @@ export class GamePanel extends Component {
     `;
   }
 
-  onMount() {
-    const $canvas = document.querySelector("#canvas");
-    const $form = document.querySelector(".game-form");
-    const $life = document.querySelector(".life");
-
-    const game = new Game({ $canvas, $form, $life });
-    game.init(text);
-    game.start(3);
-  }
+  onMount() {}
 }
