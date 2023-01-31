@@ -1,12 +1,4 @@
-import {
-  BehaviorSubject,
-  filter,
-  fromEvent,
-  map,
-  pairwise,
-  skip,
-  tap,
-} from "rxjs";
+import { BehaviorSubject, filter, map, pairwise } from "rxjs";
 
 export class Component {
   #eventSubscriptions;
@@ -25,6 +17,7 @@ export class Component {
     if (new.target.prototype.constructor === Component) {
       throw new Error("추상 클래스를 인스턴스화 할 수 없습니다.");
     }
+
     this.$target = document.createElement(tag);
     $parent.appendChild(this.$target);
     this.$parent = $parent;

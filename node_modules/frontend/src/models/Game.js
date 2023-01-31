@@ -148,3 +148,8 @@ Game.prototype.end = function () {
 Game.prototype.restart = function () {
   this.start();
 };
+
+Game.prototype.destroy = function () {
+  this.end();
+  Game._instance = null;
+};

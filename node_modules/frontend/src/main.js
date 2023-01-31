@@ -4,10 +4,12 @@ import { Component } from "./Component";
 import { GamePanel } from "./component/GamePanel";
 import { Game } from "./models/Game";
 import { loadText } from "./utils";
+import { init } from "./router";
+import { Ranking } from "./component/Ranking";
 
 const wordList = (await loadText(import.meta.env.VITE_WORDS_PATH)).split(/\s+/);
 
-new (class App extends Component {
+class App extends Component {
   onMount() {
     const container = document.querySelector(".container");
 
@@ -51,12 +53,38 @@ new (class App extends Component {
       this.setState("isPlaying", false);
       $fieldset.disabled = true;
     };
+
     game.init({ wordList, onGameStart, onGameOver });
-    game.setDifficulty(3);
+
+    //TODO 난이도 설정 UI
+    game.setDifficulty(5);
     game.start();
   }
-})(
-  document.querySelector("#app"),
-  { tag: "div", attrs: { class: "container" } },
-  { isPlaying: true }
-);
+}
+
+const route = () => {
+  const { pathname } = location;
+  document.querySelector("#app").innerHTML = "";
+
+  if (pathname === "/") {
+    const canvas = document.createElement("CANVAS");
+    canvas.setAttribute("id", "canvas");
+    document.querySelector("#app").appendChild(canvas);
+    new App(
+      document.querySelector("#app"),
+      { tag: "div", attrs: { class: "container" } },
+      { isPlaying: true }
+    );
+  }
+
+  if (pathname === "/ranking") {
+    new Ranking(document.querySelector("#app"), {
+      tag: "div",
+      attrs: { class: "ranking" },
+    });
+  }
+};
+
+init(route);
+route();
+addEventListener("popstate", route);

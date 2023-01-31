@@ -2,6 +2,7 @@ import { fromEvent } from "rxjs";
 import { filter, map, mergeMap, share } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import { Component } from "../Component.js";
+import { routeChange } from "../router.js";
 
 export class Modal extends Component {
   template({ isPlaying, ranking }) {
@@ -23,21 +24,6 @@ export class Modal extends Component {
         <button class='register'>등록하기</button>
         <button class='restart'>다시하기</button>
         <button class='ranking'>랭킹보기</button>
-        <div>
-          <ul>
-            ${ranking.reduce(
-              (acc, { name, score }) => `
-              ${acc}
-              <li>
-                <span>이름: ${name}</span>
-                <span> | </span>
-                <span>점수: ${score}</span>
-              </li>
-            `,
-              ""
-            )}
-          </ul>
-        </div>
       </div>
       </div>
   `;
@@ -65,15 +51,18 @@ export class Modal extends Component {
 
     const onClickRaking = clickModal
       .pipe(
-        filter((x) => x.target.classList.contains("ranking")),
-        mergeMap(() =>
-          ajax({
-            url: `${import.meta.env.VITE_BASE_URL}/game/ranking`,
-            method: "GET",
-          })
-        )
+        filter((x) => x.target.classList.contains("ranking"))
+        // mergeMap(() =>
+        //   ajax({
+        //     url: `${import.meta.env.VITE_BASE_URL}/game/ranking`,
+        //     method: "GET",
+        //   })
+        // )
       )
-      .subscribe(({ response }) => this.setState("ranking", response));
+      .subscribe(() => {
+        this.getState("game").destroy();
+        routeChange("/ranking");
+      });
 
     const onClickRestart = clickModal
       .pipe(filter((x) => x.target.classList.contains("restart")))
