@@ -24,7 +24,6 @@ WordDrop.speed = function (n) {
 
 WordDrop.x = function (textLength) {
   const { canvas, fontSize } = WordDrop;
-  console.log(Math.random() * (canvas.width - textLength * fontSize));
   return Math.random() * (canvas.width - textLength * fontSize);
 };
 

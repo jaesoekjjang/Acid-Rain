@@ -39,7 +39,9 @@ WordDrops.prototype.stop = function (time) {
 };
 
 WordDrops.prototype.draw = function (ctx) {
-  Object.values(this._drops.getValue()).forEach((d) => d.draw(ctx));
+  Object.values(this._drops.getValue()).forEach((d) => {
+    d.draw(ctx);
+  });
 };
 
 WordDrops.prototype.update = function (canvas, life$) {
