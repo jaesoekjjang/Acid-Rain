@@ -1,6 +1,8 @@
 import { fromEvent, BehaviorSubject, tap, interval, map } from "rxjs";
 import { WordDrop } from "./WordDrop";
 import { WordDrops } from "./WordDrops";
+import { Life } from "./Life";
+import { WordDropFactory } from "./WordDropFactory";
 
 export function Game({ $canvas, $form, $life }) {
   if (new.target) {
@@ -34,9 +36,11 @@ export function Game({ $canvas, $form, $life }) {
   this.$form = $form;
   this.$life = $life;
 
-  this.life$ = new BehaviorSubject(3);
+  this.life$ = new Life(3);
   this.score$ = new BehaviorSubject(0);
+  this.wordFacotry = new WordDropFactory();
   this.words = new WordDrops();
+
   this.interval$;
   this.submit$;
 
@@ -44,7 +48,7 @@ export function Game({ $canvas, $form, $life }) {
 
   Game.prototype.init = function ({
     wordList,
-    fontSize = 16,
+    fontSize = 20,
     onGameStart,
     onGameOver,
   }) {
@@ -58,25 +62,27 @@ export function Game({ $canvas, $form, $life }) {
   Game.prototype.setDifficulty = function (difficulty = 3) {
     const [INTERVAL, minSpeed, maxSpeed] = this.difficultyMap[difficulty];
 
+    //? Game이 가져야할 책임이 맞는가??
     this.interval$ = interval(INTERVAL).pipe(
       map((n) => this.wordList[n]),
-      tap((text) => this.words.add(text, new WordDrop(text)))
+      tap((text) => this.words.add(text, this.wordFacotry.randomCreate(text)))
     );
 
     this.submit$ = fromEvent($form, "submit").pipe(
       tap((e) => e.preventDefault()),
       map((e) => e?.target?.querySelector(".input")),
       tap(({ value: text }) => {
-        this.score$.next(this.score$.getValue() + this.words.getScore(text));
+        this.score$.next(this.score$.getValue() + this.words.hit(text));
         $form.reset();
       })
     );
 
     WordDrop.init({
       canvas: this.canvas,
+      game: this,
       minSpeed,
       maxSpeed,
-      fontSize: 16,
+      fontSize: 20,
     });
   };
 
@@ -84,14 +90,14 @@ export function Game({ $canvas, $form, $life }) {
     this.onGameStart();
     this.wordList.sort(() => Math.random() - 0.5);
 
-    this.life$.next(3);
+    this.life$.reset();
     this.score$.next(0);
 
     const intervalSubscription = this.interval$.subscribe();
     const submitSubscription = this.submit$.subscribe();
 
     // TODO 의존성을 낮출 수 있는 더 좋은 구조 생각하기
-    const lifeSubscription = this.life$.subscribe((life) => {
+    const lifeSubscription = this.life$.onChange((life) => {
       $life.innerHTML = "❤️".repeat(life);
       if (life <= 0) {
         this.gameOver();

@@ -23,18 +23,23 @@ WordDrops.prototype.has = function (key) {
   return false;
 };
 
-WordDrops.prototype.getScore = function (key) {
+WordDrops.prototype.hit = function (key) {
   if (!this.has(key)) return 0;
 
   const wordDrop = this._drops.getValue()[key];
-  const score = wordDrop.getScore();
+  const score = wordDrop.hit();
   this.remove(key);
 
-  return Math.ceil(score);
+  return score;
+};
+
+// TODO interval도 멈추기
+WordDrops.prototype.stop = function (time) {
+  Object.values(this._drops.getValue()).forEach((d) => d.stop(time));
 };
 
 WordDrops.prototype.draw = function (ctx) {
-  Object.values(this._drops.getValue()).forEach((w) => w.draw(ctx));
+  Object.values(this._drops.getValue()).forEach((d) => d.draw(ctx));
 };
 
 WordDrops.prototype.update = function (canvas, life$) {
