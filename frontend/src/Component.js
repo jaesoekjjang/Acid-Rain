@@ -42,8 +42,15 @@ export class Component {
         });
       });
 
-    this.onMount();
+    // Mutation observer 공부하기
+    this.onUnmount = this.onMount();
     this.#eventSubscriptions = this.addEvent();
+
+    // const cb = (mutationList, observer) => {
+    //   console.log(this.$parent.contains(this.$target));
+    // };
+    // const observer = new MutationObserver(cb);
+    // observer.observe(this.$parent, { childList: true });
   }
 
   /**
@@ -91,11 +98,6 @@ export class Component {
 
   setState(key, value) {
     this.#state.next({ ...this.#state.getValue(), [key]: value });
-  }
-
-  // HTMLElement를 상속 받으면 가능할듯??
-  unMount() {
-    this.#eventSubscriptions.forEach((sub) => sub.unsubscribe());
   }
 }
 

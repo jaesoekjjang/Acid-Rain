@@ -4,7 +4,6 @@
   line-height: 24px;
   font-weight: 400;
 
-  color-scheme: light dark;
   color: black;
   background-color: white;
 
@@ -50,9 +49,10 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #0d66d0;
   cursor: pointer;
   transition: border-color 0.25s;
+  color: white;
 }
 
 .status {
@@ -119,6 +119,7 @@ ul {
   height: 100%;
   border-radius: 8px;
   border-width: 0px;
+  background: #999999;
 }
 
 .input:focus {
@@ -175,20 +176,77 @@ hr {
   padding: 1rem 0.5rem;
 }
 
-.modal {
+.modal-background {
   position: absolute;
+  left: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.4);
+  width: 100vw;
+  height: 100vh;
   z-index: 1;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: black;
-  color: white;
-  width: 300px;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  width: 400px;
   height: 300px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 16px;
   padding: 16px;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-form input {
+  height: 48px;
+  outline: none;
+  border: 1px solid lightgray;
+  border-radius: 4px;
+  padding: 0px 8px;
+}
+
+.modal-form input:focus {
+  border: 1px solid #ffaf24;
+}
+
+.score-input {
+  background: lightgray;
+}
+
+.modal-form div:first-child {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-form button {
+  background: #faa20a;
+}
+
+.modal-form button:hover {
+  background: #ffaf24;
+}
+
+.modal div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal > div button:hover {
+  background: var(--input-color);
 }
 
 @media (prefers-color-scheme: light) {

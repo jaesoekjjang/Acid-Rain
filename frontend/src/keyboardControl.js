@@ -1,31 +1,40 @@
-import { fromEvent, map, tap, pairwise, BehaviorSubject } from "rxjs";
+import {
+  fromEvent,
+  map,
+  tap,
+  pairwise,
+  BehaviorSubject,
+  switchMap,
+} from "rxjs";
 
-const keydown = (element) =>
-  fromEvent(element, "keydown").pipe(map((e) => e.key));
-const keyup = (element) => fromEvent(element, "keyup").pipe(map((e) => e.key));
+// TODO refactor
 
-const enterButton$ = document.querySelector(".enter");
-// const input$ = document.querySelector(".input");
+// const keydown = (element) =>
+//   fromEvent(element, "keydown").pipe(map((e) => e.key));
+// const keyup = (element) => fromEvent(element, "keyup").pipe(map((e) => e.key));
 
-keydown(document)
-  .pipe(
-    tap((x) => {
-      if (x === "Enter") {
-        enterButton$.classList.add("active");
-      }
-    })
-  )
-  .subscribe();
+// const enterButton$ = document.querySelector(".enter");
+// // const input$ = document.querySelector(".input");
 
-keyup(document)
-  .pipe(
-    tap((x) => {
-      if (x === "Enter") {
-        enterButton$.classList.remove("active");
-      }
-    })
-  )
-  .subscribe();
+// keydown(document)
+//   .pipe(
+//     tap((x) => {
+//       if (x === "Enter") {
+//         enterButton$.classList.add("active");
+//       }
+//     })
+//   )
+//   .subscribe();
+
+// keyup(document)
+//   .pipe(
+//     tap((x) => {
+//       if (x === "Enter") {
+//         enterButton$.classList.remove("active");
+//       }
+//     })
+//   )
+//   .subscribe();
 
 // fromEvent(input$, "keydown")
 //   .pipe(
@@ -39,8 +48,3 @@ keyup(document)
 //     })
 //   )
 //   .subscribe();
-
-const subject = new BehaviorSubject(1);
-const pair = subject.pipe(pairwise());
-
-pair.subscribe(console.log);

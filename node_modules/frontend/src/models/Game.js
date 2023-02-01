@@ -89,6 +89,8 @@ export function Game({ $canvas, $form, $life }) {
 
     const intervalSubscription = this.interval$.subscribe();
     const submitSubscription = this.submit$.subscribe();
+
+    // TODO 의존성을 낮출 수 있는 더 좋은 구조 생각하기
     const lifeSubscription = this.life$.subscribe((life) => {
       $life.innerHTML = "❤️".repeat(life);
       if (life <= 0) {
@@ -98,7 +100,6 @@ export function Game({ $canvas, $form, $life }) {
     });
     const scoreSubscription = this.score$.subscribe((score) => {
       document.querySelector(".score").innerHTML = score;
-      console.log(document.querySelector(".score"));
     });
 
     this.subscriptions.push(
@@ -160,4 +161,8 @@ Game.prototype.restart = function () {
 Game.prototype.destroy = function () {
   this.end();
   Game._instance = null;
+};
+
+Game.prototype.getScore = function () {
+  return this.score$.getValue();
 };

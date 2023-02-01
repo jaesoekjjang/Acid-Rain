@@ -1,5 +1,5 @@
-import { ajax } from "rxjs/ajax";
 import { take } from "rxjs";
+import { ajax } from "rxjs/ajax";
 import { Component } from "../Component.js";
 
 export class Ranking extends Component {

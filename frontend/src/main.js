@@ -17,6 +17,7 @@ class App extends Component {
       container,
       {
         tag: "div",
+        attrs: { class: "game_panel" },
       },
       {
         setIsPlaying: (value) => this.setState("isPlaying", value),
@@ -37,13 +38,14 @@ class App extends Component {
         game,
         isPlaying: () => this.getState("isPlaying"),
         setIsPlaying: (value) => this.setState("isPlaying", value),
-        ranking: [],
+        score: () => this.getState("score"),
       }
     );
 
     this.addComponents([gamePanel, modal]);
 
     const onGameStart = () => {
+      //! 여기서 시작하자마자 한번 리렌더링 됨
       this.setState("isPlaying", true);
       $fieldset.disabled = false;
       $input.focus();
@@ -51,6 +53,7 @@ class App extends Component {
 
     const onGameOver = () => {
       this.setState("isPlaying", false);
+      this.setState("score", game.getScore());
       $fieldset.disabled = true;
     };
 
@@ -73,7 +76,7 @@ const route = () => {
     new App(
       document.querySelector("#app"),
       { tag: "div", attrs: { class: "container" } },
-      { isPlaying: true }
+      { isPlaying: true, score: 0 }
     );
   }
 
