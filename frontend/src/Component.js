@@ -1,9 +1,20 @@
 import { BehaviorSubject, filter, map, pairwise } from "rxjs";
 
+export function createElement(tag, props, children) {
+  if (typeof tag === "function") {
+    return new tag(props);
+  }
+
+  if (typeof tag === "string") {
+    return new Element(tag, props, children);
+  }
+}
+
 export class Component {
-  #components;
   #state;
   #pairState;
+  #parent;
+  #children;
   /**
    * @param {HTMLElement} $parent - 컴포넌트의 컨테이너
    * @param {Object} target - 컨테이너 바로 아래 최상위 노드
@@ -20,16 +31,15 @@ export class Component {
     this.#state = new BehaviorSubject(initialState ?? {});
     this.#pairState = this.#state.pipe(pairwise());
 
-    this.addComponents();
-
     this.#pairState
       .pipe(
         filter(([prev, cur]) => prev != cur),
         map(([, cur]) => cur)
       )
       .subscribe(() => {
-        console.log(this.$parent);
-        this.render(this.$parent);
+        //! 수정 필요. 자식의 렌더함수에서 처리하는게 좋아보임.
+        this.#parent.innerHTML = "";
+        this.render(this.#parent);
       });
 
     // Mutation observer 공부하기
@@ -41,29 +51,21 @@ export class Component {
     // observer.observe(this.$parent, { childList: true });
   }
 
-  /**
-   * @param  {Component[]} components
-   */
-  addComponents(components = []) {
-    this.#components = Array.isArray(components) ? components : [components];
+  mount($parent) {
+    this.render($parent);
+    this.onUnmount = this.onMount();
   }
 
   render($parent) {
-    //! App 컴포넌트가 없어짐. template에서 컴포넌트를 생성하도록, 또는 render 함수를 다시 작성
-    $parent.innerHTML = "";
-    this.$parent = $parent;
-    this.children = this.template(this.#state.getValue());
-    const rendered = this.children?.render($parent);
-    this.onUnmount = this.onMount();
+    this.#parent = $parent;
+    this.#children = this.template(this.#state.getValue());
+    const rendered = this.#children?.render($parent);
+    this.onRender();
     return rendered;
-
-    this.$parent.appendChild(this.$target);
-    this.$target.innerHTML = this.template(this.#state.getValue());
-    Object.keys(this.attrs).forEach((key) => {
-      this.$target.setAttribute(key, this.attrs[key]);
-    });
   }
 
+  onUpdate() {}
+  onRender() {}
   // export class Component {
   //   #eventSubscriptions;
   //   #components;
@@ -157,28 +159,17 @@ export class Component {
     return this.#state.getValue()[key];
   }
 
-  getStates(...keys) {
-    let res = {};
-    for (let key of keys) {
-      Object.assign(res, { [key]: this.#state.getValue()[key] });
-    }
-    return res;
+  getStates() {
+    return this.#state.getValue();
   }
 
   setState(key, value) {
+    if (value === this.getState(key)) return;
     this.#state.next({ ...this.#state.getValue(), [key]: value });
   }
 }
 
-export class MemoComponent extends Component {
-  render() {
-    if (this.memo) {
-      return this.$parent.appendChild(this.$target);
-    }
-    super.render();
-    this.memo = this.$target.innerHTML;
-  }
-}
+export class MemoComponent extends Component {}
 
 export class Element {
   constructor(tag, attrs, children = []) {
@@ -195,6 +186,7 @@ export class Element {
 
     $parent.append(this.element);
     this.children.forEach((child) => {
+      if (!child) return;
       if (typeof child === "string" || typeof child === "number") {
         this.element.innerText = child;
       } else {

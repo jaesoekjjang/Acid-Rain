@@ -1,36 +1,62 @@
 import { fromEvent } from "rxjs";
 import { filter, map, mergeMap, share, tap } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
-import { Component } from "../Component.js";
+import { Component, createElement } from "../Component.js";
 import { routeChange } from "../router.js";
 
 export class Modal extends Component {
-  template({ isPlaying, score }) {
-    return isPlaying()
-      ? ""
-      : `
-      <div class='modal-background'>
-        <div class='modal'>
-          <form class='modal-form'>
-            <div>
-              <input class='name-input' type='text' name='name' type="text" placeholder='이름'/>
-              <input class='score-input' type='text' name='score' value='${score()}점' disabled>
-            </div>
-            <div>
-              <button class='register'>랭킹 등록하기</button>
-            </div>
-          </form>
-          <div>
-            <button class='restart'>다시하기</button>
-            <button class='ranking'>랭킹보기</button>
-          </div>
-      </div>
-      </div>
-  `;
+  template() {
+    return createElement("div", { class: "modal-background" }, [
+      createElement("div", { class: "modal" }, [
+        createElement("form", { class: "modal-form" }, [
+          createElement("div", null, [
+            createElement("input", {
+              class: "name-input",
+              type: "text",
+              name: "name",
+              type: "text",
+              placeholder: "이름",
+            }),
+            createElement("input", {
+              class: "score-input",
+              type: "text",
+              name: "score",
+              value: `점`,
+              disabled: true,
+            }),
+          ]),
+          createElement(
+            "div",
+            null,
+            createElement("button", { class: "register" }, "랭킹 등록하기")
+          ),
+        ]),
+        createElement("div", null, [
+          createElement("button", { class: "restart" }, "다시하기"),
+          createElement("button", { class: "ranking" }, "랭킹보기"),
+        ]),
+      ]),
+    ]);
   }
 
-  addEvent() {
-    const clickModal = fromEvent(this.$target, "click").pipe(share());
+  //! 첫 렌더시에만 실행돼야함
+  // onMount() {
+  //   const { setIsPlaying, isPlaying } = this.getStates();
+  //   const clickModal = fromEvent(
+  //     document.querySelector(".modal"),
+  //     "click"
+  //   ).pipe(share());
+
+  //   clickModal
+  //     .pipe(filter((x) => x.target.classList.contains("restart")))
+  //     .subscribe(() => setIsPlaying(false));
+  // }
+
+  onRender() {
+    const clickModal = fromEvent(
+      document.querySelector(".modal"),
+      "click"
+    ).pipe(share());
 
     const onClickRegister = clickModal
       .pipe(
@@ -68,13 +94,9 @@ export class Modal extends Component {
     const onClickRestart = clickModal
       .pipe(filter((x) => x.target.classList.contains("restart")))
       .subscribe(() => {
-        const { isPlaying, setIsPlaying, game } = this.getStates(
-          "isPlaying",
-          "setIsPlaying",
-          "game"
-        );
+        const { isPlaying, setIsPlaying, game } = this.getStates();
 
-        setIsPlaying(!isPlaying());
+        setIsPlaying(!isPlaying);
         game.restart();
       });
 

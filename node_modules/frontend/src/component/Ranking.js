@@ -1,30 +1,29 @@
 import { take } from "rxjs";
 import { ajax } from "rxjs/ajax";
-import { Component } from "../Component.js";
+import { Component, createElement } from "../Component.js";
 
 export class Ranking extends Component {
   template({ ranking }) {
-    return `
-      <header>헤더</header>
-
-      <ul>
-        <hr />
-        ${ranking?.reduce(
-          (acc, { name, score }, index) => `
-        ${acc}
-        <li>
-          <span>${index + 1}위</span>
-          <span> | </span>
-          <span>이름: ${name}</span>
-          <span> | </span>
-          <span>점수: ${score}</span>
-        </li>
-        <hr />
-      `,
-          ""
-        )}
-    </ul>
-    `;
+    return createElement("div", { class: "ranking" }, [
+      createElement("header", null, "헤더"),
+      createElement(
+        "ul",
+        null,
+        ranking?.reduce((acc, { name, score }, index) => {
+          acc.push(
+            createElement("li", null, [
+              createElement("span", null, `${index + 1}위`),
+              createElement("span", null, "|"),
+              createElement("span", null, `${name}`),
+              createElement("span", null, "|"),
+              createElement("span", null, `${score}`),
+            ]),
+            createElement("hr")
+          );
+          return acc;
+        }, [])
+      ),
+    ]);
   }
 
   onMount() {

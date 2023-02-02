@@ -14,9 +14,13 @@ export function Game({ $canvas, $form, $life }) {
   }
 
   this.canvas = $canvas;
+  this.$form = $form;
+  this.$life = $life;
+
+  this.ctx = this.canvas.getContext("2d");
+
   $canvas.width = document.body.clientWidth;
   $canvas.height = document.body.clientHeight;
-  this.ctx = $canvas.getContext("2d");
 
   this.onGameStart;
   this.onGameOver;
@@ -32,9 +36,6 @@ export function Game({ $canvas, $form, $life }) {
     4: [1000, 3, 10],
     5: [800, 5, 12],
   };
-
-  this.$form = $form;
-  this.$life = $life;
 
   this.life$ = new Life(3);
   this.score$ = new BehaviorSubject(0);
@@ -60,7 +61,11 @@ export function Game({ $canvas, $form, $life }) {
   };
 
   Game.prototype.setDifficulty = function (difficulty = 3) {
-    const [INTERVAL, minSpeed, maxSpeed] = this.difficultyMap[difficulty];
+    this.difficulty = difficulty;
+  };
+
+  Game.prototype.start = function () {
+    const [INTERVAL, minSpeed, maxSpeed] = this.difficultyMap[this.difficulty];
 
     //? Game이 가져야할 책임이 맞는가??
     this.interval$ = interval(INTERVAL).pipe(
@@ -68,12 +73,15 @@ export function Game({ $canvas, $form, $life }) {
       tap((text) => this.words.add(text, this.wordFacotry.randomCreate(text)))
     );
 
-    this.submit$ = fromEvent($form, "submit").pipe(
+    this.submit$ = fromEvent(
+      document.querySelector(".game-form"),
+      "submit"
+    ).pipe(
       tap((e) => e.preventDefault()),
       map((e) => e?.target?.querySelector(".input")),
       tap(({ value: text }) => {
         this.score$.next(this.score$.getValue() + this.words.hit(text));
-        $form.reset();
+        document.querySelector(".game-form").reset();
       })
     );
 
@@ -84,9 +92,7 @@ export function Game({ $canvas, $form, $life }) {
       maxSpeed,
       fontSize: 20,
     });
-  };
 
-  Game.prototype.start = function () {
     this.onGameStart();
     this.wordList.sort(() => Math.random() - 0.5);
 
@@ -98,7 +104,7 @@ export function Game({ $canvas, $form, $life }) {
 
     // TODO 의존성을 낮출 수 있는 더 좋은 구조 생각하기
     const lifeSubscription = this.life$.onChange((life) => {
-      $life.innerHTML = "❤️".repeat(life);
+      document.querySelector(".life").innerHTML = "❤️".repeat(life);
       if (life <= 0) {
         this.gameOver();
         return;
@@ -120,6 +126,7 @@ export function Game({ $canvas, $form, $life }) {
   };
 
   Game.prototype.render = function () {
+    this.ctx.font = `20px Verdana`;
     const loop = () => {
       if (!this.animationPlaying) return;
       this.ctx.clearRect(
