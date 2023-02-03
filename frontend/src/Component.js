@@ -1,16 +1,16 @@
 import { BehaviorSubject, filter, map, pairwise } from "rxjs";
 
-function updateElement(prev, next, parent, index = 0, parentEl) {
+function updateElement(prev, next, $parent, parentElement, index = 0) {
   if (!prev && next) {
-    next.render(parent);
-    parentEl._children.push(next);
+    next.mount($parent);
+    parentElement.children.push(next);
     return;
   }
 
   if (!next) {
-    parent.removeChild(parent.childNodes[index]);
-    parentEl._children.splice(index, 1);
-    // parentEl._children.splice(index, 1, null); //Bug해결??
+    $parent.removeChild($parent.childNodes[index]);
+    parentElement.children.splice(index, 1);
+    // parentElement.children.splice(index, 1, null); //Bug해결??
     return;
   }
 
@@ -18,25 +18,25 @@ function updateElement(prev, next, parent, index = 0, parentEl) {
     (typeof prev === "string" || typeof prev === "number") &&
     (typeof next === "string" || typeof prev === "number")
   ) {
-    if (prev !== next) parent.innerText = next;
+    if (prev !== next) $parent.innerText = next;
     return;
   }
 
   if (typeof prev.tag === "function" || typeof next.tag === "function") {
-    updateElement(prev.children, next.template(), parent, index, prev);
+    updateElement(prev.children, next.template(), $parent, prev, index);
     return;
   }
 
   if (typeof prev.tag !== typeof next.tag) {
-    return parent.replaceChild(next.render(parent), parent.childNodes[index]);
+    return $parent.replaceChild(next.mount($parent), $parent.childNodes[index]);
   }
 
   for (const [attr, value] of Object.entries(prev.attrs)) {
     if (prev[attr] !== next[attr]) {
       if (!next[attr]) {
-        parent.removeAttribute(attr, value);
+        $parent.removeAttribute(attr, value);
       } else {
-        parent.setAttribute(attr, value);
+        $parent.setAttribute(attr, value);
       }
     }
   }
@@ -48,9 +48,9 @@ function updateElement(prev, next, parent, index = 0, parentEl) {
     updateElement(
       prev.children[i],
       next.children[i],
-      parent.childNodes[index],
-      i,
-      prev
+      $parent.childNodes[index],
+      prev,
+      i
     );
   }
 }
@@ -70,12 +70,12 @@ class Element {
   constructor(tag, attrs, children = []) {
     this.tag = tag;
     this.attrs = attrs || {};
-    this._children = Array.isArray(children)
+    this.children = Array.isArray(children)
       ? children.filter((x) => x)
       : [children];
   }
 
-  render($parent) {
+  mount($parent) {
     this.element = document.createElement(this.tag);
     Object.keys(this.attrs).forEach((key) => {
       this.element.setAttribute(key, this.attrs[key]);
@@ -87,23 +87,20 @@ class Element {
       if (typeof child === "string" || typeof child === "number") {
         this.element.innerText = child;
       } else {
-        child.render(this.element);
+        child.mount(this.element);
       }
     });
 
     return this.element;
   }
-
-  get children() {
-    return this._children;
-  }
 }
 
 export class Component {
+  $parent;
+  children;
   #state;
   #pairState;
-  #parent;
-  children;
+
   /**
    * @param {HTMLElement} $parent - 컴포넌트의 컨테이너
    * @param {Object} target - 컨테이너 바로 아래 최상위 노드
@@ -131,28 +128,21 @@ export class Component {
   }
 
   mount($parent) {
-    this.render($parent);
-    this.onUnmount = this.onMount();
-  }
-
-  render($parent) {
-    this.#parent = $parent;
+    this.$parent = $parent;
     this.children = this.template(this.#state.getValue());
-    const rendered = this.children?.render($parent);
-    this.onRender();
+    const rendered = this.children?.mount($parent);
+    const onUnMount = this.onMount();
+
+    this.#unMount(onUnMount);
+
     return rendered;
   }
 
   // Mutation observer 공부하기
 
-  // const cb = (mutationList, observer) => {
-  //   console.log(this.$parent.contains(this.$target));
-  // };
-  // const observer = new MutationObserver(cb);
-  // observer.observe(this.$parent, { childList: true });
   update() {
     const next = this.template(this.#state.getValue());
-    updateElement(this.children, next, this.#parent);
+    updateElement(this.children, next, this.$parent);
   }
 
   onUpdate() {}
@@ -167,11 +157,16 @@ export class Component {
 
   onMount() {}
 
-  /**
-   * @returns {Subscription} subscriptions
-   * @description 이벤트를 추가한 뒤, subscription을 배열로 반환해야 한다.
-   */
-  addEvent() {}
+  #unMount(onUnmount) {
+    const onObserve = (mutationList, observer) => {
+      if (!this.$parent.contains(this.children.element)) {
+        observer.disconnect();
+        onUnmount();
+      }
+    };
+    const observer = new MutationObserver(onObserve);
+    observer.observe(this.$parent, { childList: true });
+  }
 
   getState(key) {
     return this.#state.getValue()[key];
@@ -186,8 +181,6 @@ export class Component {
     this.#state.next({ ...this.#state.getValue(), [key]: value });
   }
 }
-
-export class MemoComponent extends Component {}
 
 // update로 children node가 추가되면 Element의 _children에도 반영돼야함.
 

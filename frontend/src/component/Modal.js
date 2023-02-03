@@ -52,7 +52,8 @@ export class Modal extends Component {
   //     .subscribe(() => setIsPlaying(false));
   // }
 
-  onRender() {
+  // unMount 해야함
+  onMount() {
     const clickModal = fromEvent(
       document.querySelector(".modal"),
       "click"
@@ -64,6 +65,7 @@ export class Modal extends Component {
       game.restart();
     });
 
+    return () => console.log("modal unmounted");
     // const onClickRegister = clickModal
     //   .pipe(
     //     filter((x) => x.target.classList.contains("register")),

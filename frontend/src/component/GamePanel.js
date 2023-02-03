@@ -20,7 +20,7 @@ export class GamePanel extends Component {
     ]);
   }
 
-  onRender() {
+  onMount() {
     fromEvent(document.querySelector(".game-form"), "submit")
       .pipe(tap((e) => e.preventDefault()))
       .subscribe();
