@@ -58,49 +58,55 @@ export class Modal extends Component {
       "click"
     ).pipe(share());
 
-    const onClickRegister = clickModal
-      .pipe(
-        filter((x) => x.target.classList.contains("register")),
-        tap((e) => e.preventDefault()),
-        map(() => {
-          const { name, score } = document.querySelector(".modal-form");
-          return { userName: name.value, score: score.value.replace("점", "") };
-        }),
-        mergeMap((body) =>
-          ajax({
-            url: `${import.meta.env.VITE_BASE_URL}/game`,
-            method: "POST",
-            body,
-          })
-        )
-      )
-      .subscribe(({ response }) => console.log(response));
+    const { setIsPlaying, game } = this.getStates();
+    clickModal.subscribe(() => {
+      setIsPlaying(true);
+      game.restart();
+    });
 
-    const onClickRaking = clickModal
-      .pipe(
-        filter((x) => x.target.classList.contains("ranking"))
-        // mergeMap(() =>
-        //   ajax({
-        //     url: `${import.meta.env.VITE_BASE_URL}/game/ranking`,
-        //     method: "GET",
-        //   })
-        // )
-      )
-      .subscribe(() => {
-        this.getState("game").destroy();
-        routeChange("/ranking");
-      });
+    // const onClickRegister = clickModal
+    //   .pipe(
+    //     filter((x) => x.target.classList.contains("register")),
+    //     tap((e) => e.preventDefault()),
+    //     map(() => {
+    //       const { name, score } = document.querySelector(".modal-form");
+    //       return { userName: name.value, score: score.value.replace("점", "") };
+    //     }),
+    //     mergeMap((body) =>
+    //       ajax({
+    //         url: `${import.meta.env.VITE_BASE_URL}/game`,
+    //         method: "POST",
+    //         body,
+    //       })
+    //     )
+    //   )
+    //   .subscribe(({ response }) => console.log(response));
 
-    const onClickRestart = clickModal
-      .pipe(filter((x) => x.target.classList.contains("restart")))
-      .subscribe(() => {
-        const { isPlaying, setIsPlaying, game } = this.getStates();
+    // const onClickRaking = clickModal
+    //   .pipe(
+    //     filter((x) => x.target.classList.contains("ranking"))
+    //     // mergeMap(() =>
+    //     //   ajax({
+    //     //     url: `${import.meta.env.VITE_BASE_URL}/game/ranking`,
+    //     //     method: "GET",
+    //     //   })
+    //     // )
+    //   )
+    //   .subscribe(() => {
+    //     this.getState("game").destroy();
+    //     routeChange("/ranking");
+    //   });
 
-        setIsPlaying(!isPlaying);
-        game.restart();
-      });
+    // const onClickRestart = clickModal
+    //   .pipe(filter((x) => x.target.classList.contains("restart")))
+    //   .subscribe(() => {
+    //     const { isPlaying, setIsPlaying, game } = this.getStates();
 
-    return [onClickRegister, onClickRaking, onClickRestart];
+    //     setIsPlaying(!isPlaying);
+    //     game.restart();
+    //   });
+
+    // return [onClickRegister, onClickRaking, onClickRestart];
   }
 }
 

@@ -1,10 +1,9 @@
 import { fromEvent, tap } from "rxjs";
-import { Component, createElement, Element, MemoComponent } from "../Component";
+import { Component, createElement } from "../Component";
 import("../keyboardControl");
 
-export class GamePanel extends MemoComponent {
+export class GamePanel extends Component {
   template() {
-    console.log("panel");
     return createElement("div", null, [
       createElement("div", { class: "status" }, [
         createElement("span", { class: "score" }),
@@ -21,10 +20,9 @@ export class GamePanel extends MemoComponent {
     ]);
   }
 
-  onMount() {
-    console.log(document.querySelector(".game-form"));
+  onRender() {
     fromEvent(document.querySelector(".game-form"), "submit")
       .pipe(tap((e) => e.preventDefault()))
-      .subscribe(console.log);
+      .subscribe();
   }
 }

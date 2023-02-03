@@ -36,9 +36,9 @@ WordDrop.prototype.skill = function () {};
 
 WordDrop.prototype.getScore = function () {
   return (
-    ((WordDrop.minSpeed + WordDrop.maxSpeed) / 2) * 20 +
-    this.text.length * 15 +
-    15 * 1.1 ** WordDrop.count
+    ((WordDrop.minSpeed + WordDrop.maxSpeed) / 2) * 40 +
+    this.text.length * 20 +
+    20 * 1.1 ** WordDrop.count
   );
 };
 
@@ -54,21 +54,6 @@ WordDrop.prototype.draw = function (ctx) {
   ctx.fillStyle = this.fillStyle;
   ctx.fillText(this.text, this.x, this.y);
   ctx.restore();
-
-  // ctx.fillStyle = this.fillStyle;
-  // ctx.fillRect(
-  //   this.x,
-  //   this.y,
-  //   WordDrop.fontSize * this.text.length + 10,
-  //   WordDrop.fontSize
-  // );
-  // ctx.fillStyle = "white";
-  // console.log(WordDrop.fontSize);
-  // ctx.fillText(
-  //   this.text,
-  //   this.x + (WordDrop.fontSize * this.text.length) / 2,
-  //   this.y + WordDrop.fontSize
-  // );
 };
 
 WordDrop.prototype.update = function (canvas, words$, life$) {
