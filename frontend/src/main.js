@@ -28,7 +28,7 @@ class App extends Component {
   onMount() {
     const $canvas = document.querySelector("#canvas");
     const $fieldset = document.querySelector(".game-fieldset");
-    const game = new Game({ $canvas });
+    const game = new Game({ $canvas, $form: $fieldset.form });
 
     this.setState("game", game);
 

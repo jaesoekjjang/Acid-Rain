@@ -1,8 +1,7 @@
 import { fromEvent, BehaviorSubject, tap, interval, map } from "rxjs";
-import { WordDrop } from "./WordDrop";
 import { WordDrops } from "./WordDrops";
 import { Life } from "./Life";
-import { WordDropFactory } from "./WordDropFactory";
+import { WordDropManager } from "./WordDropManager";
 
 export function Game({ $canvas, $form, $life }) {
   if (new.target) {
@@ -28,18 +27,8 @@ export function Game({ $canvas, $form, $life }) {
   this.animation;
   this.animationPlaying = false;
 
-  // [interval, minSpeed, maxSpeed]
-  this.difficultyMap = {
-    1: [3000, 1, 6],
-    2: [2000, 2, 7.5],
-    3: [1500, 2.5, 9],
-    4: [1000, 3, 10],
-    5: [800, 5, 12],
-  };
-
   this.life$ = new Life(3);
   this.score$ = new BehaviorSubject(0);
-  this.wordFacotry = new WordDropFactory();
   this.words = new WordDrops();
 
   this.interval$;
@@ -53,6 +42,14 @@ export function Game({ $canvas, $form, $life }) {
     onGameStart,
     onGameOver,
   }) {
+    this.wordDropManager = new WordDropManager({
+      canvas: this.canvas,
+      game: this,
+      wordList,
+      fontSize,
+      difficulty: 4,
+    });
+
     this.wordList = wordList;
     this.ctx.font = `${fontSize}px Verdana`;
 
@@ -65,18 +62,11 @@ export function Game({ $canvas, $form, $life }) {
   };
 
   Game.prototype.start = function () {
-    const [INTERVAL, minSpeed, maxSpeed] = this.difficultyMap[this.difficulty];
+    this.wordDropManager.startInterval((wordDrop) => {
+      this.words.add(wordDrop.text, wordDrop);
+    });
 
-    //? Game이 가져야할 책임이 맞는가??
-    this.interval$ = interval(INTERVAL).pipe(
-      map((n) => this.wordList[n]),
-      tap((text) => this.words.add(text, this.wordFacotry.randomCreate(text)))
-    );
-
-    this.submit$ = fromEvent(
-      document.querySelector(".game-form"),
-      "submit"
-    ).pipe(
+    this.submit$ = fromEvent(this.$form, "submit").pipe(
       tap((e) => e.preventDefault()),
       map((e) => e?.target?.querySelector(".input")),
       tap(({ value: text }) => {
@@ -85,21 +75,12 @@ export function Game({ $canvas, $form, $life }) {
       })
     );
 
-    WordDrop.init({
-      canvas: this.canvas,
-      game: this,
-      minSpeed,
-      maxSpeed,
-      fontSize: 20,
-    });
-
     this.onGameStart();
     this.wordList.sort(() => Math.random() - 0.5);
 
     this.life$.reset();
     this.score$.next(0);
 
-    const intervalSubscription = this.interval$.subscribe();
     const submitSubscription = this.submit$.subscribe();
 
     // TODO 의존성을 낮출 수 있는 더 좋은 구조 생각하기
@@ -115,7 +96,6 @@ export function Game({ $canvas, $form, $life }) {
     });
 
     this.subscriptions.push(
-      intervalSubscription,
       submitSubscription,
       lifeSubscription,
       scoreSubscription
@@ -137,7 +117,7 @@ export function Game({ $canvas, $form, $life }) {
       );
 
       this.words.draw(this.ctx);
-      this.words.update(this.canvas, this.life$);
+      this.words.update(this.life$);
 
       this.animation = requestAnimationFrame(loop);
     };

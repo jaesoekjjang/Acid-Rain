@@ -7,7 +7,6 @@ export function WordDrops() {
 
 WordDrops.prototype.add = function (key, value) {
   this._drops.next({ ...this._drops.getValue(), [key]: value });
-  WordDrop.count += 1;
 };
 
 WordDrops.prototype.remove = function (key) {
@@ -33,7 +32,6 @@ WordDrops.prototype.hit = function (key) {
   return score;
 };
 
-// TODO interval도 멈추기
 WordDrops.prototype.stop = function (time) {
   Object.values(this._drops.getValue()).forEach((d) => d.stop(time));
 };
@@ -44,13 +42,15 @@ WordDrops.prototype.draw = function (ctx) {
   });
 };
 
-WordDrops.prototype.update = function (canvas, life$) {
-  Object.values(this._drops.getValue()).forEach((w) =>
-    w.update(canvas, this._drops, life$)
-  );
+WordDrops.prototype.update = function (life$) {
+  Object.values(this._drops.getValue()).forEach((w) => {
+    w.update(this, life$);
+    if (w.isAlive()) return;
+    this.remove(w.text);
+    life$.sub();
+  });
 };
 
 WordDrops.prototype.clear = function () {
   this._drops.next({});
-  WordDrop.count = 0;
 };

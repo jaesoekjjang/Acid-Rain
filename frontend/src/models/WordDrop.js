@@ -1,16 +1,21 @@
-export function WordDrop(text) {
+export function WordDrop({ canvas, game, text, count }) {
+  this.canvas = canvas;
+  this.ctx = canvas.getContext("2d");
+  this.game = game;
+
   this.text = text;
-  this.speed = WordDrop.speed(WordDrop.count);
-  this.x = WordDrop.x(text.length);
+  this.count = count;
+  this.speed = WordDrop.speed(count);
+  this.x = WordDrop.x({
+    canvas,
+    fontSize: WordDrop.fontSize,
+    textLength: text.length,
+  });
   this.y = 0;
-  this.fillStyle = "white";
+  this.color = "white";
 }
 
-WordDrop.count = 0;
-
-WordDrop.init = function ({ canvas, game, minSpeed, maxSpeed, fontSize }) {
-  WordDrop.canvas = canvas;
-  WordDrop.game = game;
+WordDrop.init = function ({ minSpeed, maxSpeed, fontSize }) {
   WordDrop.minSpeed = minSpeed;
   WordDrop.maxSpeed = maxSpeed;
   WordDrop.fontSize = fontSize;
@@ -22,8 +27,7 @@ WordDrop.speed = function (n) {
   return speed > maxSpeed ? maxSpeed : speed;
 };
 
-WordDrop.x = function (textLength) {
-  const { canvas, fontSize } = WordDrop;
+WordDrop.x = function ({ canvas, fontSize, textLength }) {
   return Math.random() * (canvas.width - textLength * fontSize);
 };
 
@@ -38,7 +42,7 @@ WordDrop.prototype.getScore = function () {
   return (
     ((WordDrop.minSpeed + WordDrop.maxSpeed) / 2) * 40 +
     this.text.length * 20 +
-    20 * 1.1 ** WordDrop.count
+    20 * 1.1 ** this.count
   );
 };
 
@@ -49,39 +53,37 @@ WordDrop.prototype.stop = function (time = 3000) {
   return;
 };
 
-WordDrop.prototype.draw = function (ctx) {
-  ctx.save();
-  ctx.fillStyle = this.fillStyle;
-  ctx.fillText(this.text, this.x, this.y);
-  ctx.restore();
+WordDrop.prototype.draw = function () {
+  this.ctx.save();
+  this.ctx.fillStyle = this.color;
+  this.ctx.fillText(this.text, this.x, this.y);
+  this.ctx.restore();
 };
 
-WordDrop.prototype.update = function (canvas, words$, life$) {
+WordDrop.prototype.update = function () {
   this.y += this.speed;
-  if (this.y <= canvas.height + WordDrop.fontSize) return;
+};
 
-  const words = words$.getValue();
-  const copy = { ...words };
-  delete copy[this.text];
-  words$.next(copy);
-  life$.sub();
+WordDrop.prototype.isAlive = function () {
+  if (this.y <= this.canvas.height + WordDrop.fontSize) return true;
+  return false;
 };
 
 export class GoldenWordDrop extends WordDrop {
-  fillStyle = "#ffaf24";
+  color = "#ffaf24";
 
   skill() {
-    const { life$ } = WordDrop.game;
+    const { life$ } = this.game;
 
     life$.add();
   }
 }
 
 export class BlueWordDrop extends WordDrop {
-  fillStyle = "#097cfb";
+  color = "#097cfb";
 
   skill() {
-    const { words } = WordDrop.game;
+    const { words } = this.game;
     words.stop(3000);
   }
 }

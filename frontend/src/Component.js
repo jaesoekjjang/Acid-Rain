@@ -1,4 +1,124 @@
-import { BehaviorSubject, filter, map, pairwise } from "rxjs";
+import { BehaviorSubject, filter, map, pairwise, skip, tap } from "rxjs";
+
+/**
+ * @param {Object} tag - 엘리먼트의 태그 명 또는 컴포넌트를 상속받은 클래스
+ * @param {string} props - 일반 엘리먼트는 class 또는 id와 같은 속성, 컴포넌트는 초기 상태를 의미한다
+ * @param {string | number | Element[] | Component[]} children - 자식 엘리먼트를 배열로 전달
+ * @returns {Element | Component}
+ * @example createElement('div', {class: 'greet'}, 'hello')
+ * @example createElement(App, {id: 'app'}, [createElement(Header, {id: 'header'})])
+ */
+export function createElement(tag, props, children) {
+  if (typeof tag === "function") {
+    return new tag(props);
+  }
+
+  if (typeof tag === "string") {
+    return new Element(tag, props, children);
+  }
+}
+
+class Element {
+  element;
+  constructor(tag, attrs, children = []) {
+    this.tag = tag;
+    this.attrs = attrs || {};
+    this.children = Array.isArray(children)
+      ? children.filter((x) => x)
+      : [children];
+  }
+
+  mount($parent) {
+    this.element = document.createElement(this.tag);
+    Object.keys(this.attrs).forEach((key) => {
+      this.element.setAttribute(key, this.attrs[key]);
+    });
+
+    $parent.append(this.element);
+    this.children.forEach((child) => {
+      if (typeof child === "string" || typeof child === "number") {
+        this.element.innerText = child;
+      } else {
+        child.mount(this.element);
+      }
+    });
+
+    return this.element;
+  }
+}
+
+export class Component {
+  tag;
+  $parent;
+  children;
+  #state;
+
+  /**
+   * @param {{[key]: any}} props - {key: value} 형식의 객체만 전달 가능합니다. 여기서의 key값을 getState(), setState() 메서드에 전달해 상태를 조회, 수정할 수 있습니다.
+   */
+  constructor(props) {
+    if (this.constructor === Component) {
+      throw new Error("추상 클래스를 인스턴스화 할 수 없습니다.");
+    }
+    this.tag = this.constructor;
+    this.#state = new BehaviorSubject(props ?? {});
+    this.#state.pipe(skip(1)).subscribe(() => {
+      this.update();
+      this.onUpdate();
+    });
+  }
+
+  mount($parent) {
+    this.$parent = $parent;
+    this.children = this.template(this.#state.getValue());
+    const mounted = this.children?.mount($parent);
+
+    const beforeUnmount = this.onMount();
+    this.#unmount(beforeUnmount);
+
+    return mounted;
+  }
+
+  template() {}
+
+  /**
+   * @description unmount전에 실행할 함수를 onMount의 리턴으로 넘겨주어야 한다.
+   */
+  onMount() {}
+
+  update() {
+    const next = this.template(this.#state.getValue());
+    updateElement(this.children, next, this.$parent);
+    this.onUpdate();
+  }
+
+  onUpdate() {}
+
+  #unmount(callback) {
+    const onObserve = (_, observer) => {
+      if (!this.$parent.contains(this.children.element)) {
+        this.#state.complete();
+        callback();
+        observer.disconnect();
+      }
+    };
+    const observer = new MutationObserver(onObserve);
+    observer.observe(this.$parent, { childList: true });
+  }
+
+  getState(key) {
+    return this.#state.getValue()[key];
+  }
+
+  getStates() {
+    return this.#state.getValue();
+  }
+
+  setState(key, value) {
+    if (value === this.getState(key)) return;
+    this.#state.next({ ...this.#state.getValue(), [key]: value });
+  }
+}
 
 function updateElement(prev, next, $parent, parentElement, index = 0) {
   if (!prev && next) {
@@ -55,136 +175,9 @@ function updateElement(prev, next, $parent, parentElement, index = 0) {
   }
 }
 
-export function createElement(tag, props, children) {
-  if (typeof tag === "function") {
-    return new tag(props);
-  }
-
-  if (typeof tag === "string") {
-    return new Element(tag, props, children);
-  }
-}
-
-class Element {
-  element;
-  constructor(tag, attrs, children = []) {
-    this.tag = tag;
-    this.attrs = attrs || {};
-    this.children = Array.isArray(children)
-      ? children.filter((x) => x)
-      : [children];
-  }
-
-  mount($parent) {
-    this.element = document.createElement(this.tag);
-    Object.keys(this.attrs).forEach((key) => {
-      this.element.setAttribute(key, this.attrs[key]);
-    });
-
-    $parent.append(this.element);
-    this.children.forEach((child) => {
-      if (!child) return;
-      if (typeof child === "string" || typeof child === "number") {
-        this.element.innerText = child;
-      } else {
-        child.mount(this.element);
-      }
-    });
-
-    return this.element;
-  }
-}
-
-export class Component {
-  $parent;
-  children;
-  #state;
-  #pairState;
-
-  /**
-   * @param {HTMLElement} $parent - 컴포넌트의 컨테이너
-   * @param {Object} target - 컨테이너 바로 아래 최상위 노드
-   * @param {string} target.tag - target의 태그명
-   * @param {string} target.attrs - target의 속성
-   * @param {{[string]: any}} initialState - {키: 밸류} 형식의 객체만 전달 가능합니다. 여기서의 키 값을 getState(), setState() 메서드에 전달해 상태를 조회, 수정할 수 있습니다.
-   * @example App(document.querySelector('#app'), {tag: 'div', class: 'header'}, {count: 0})
-   */
-  constructor(initialState) {
-    if (new.target.prototype.constructor === Component) {
-      throw new Error("추상 클래스를 인스턴스화 할 수 없습니다.");
-    }
-    this.tag = this.constructor;
-    this.#state = new BehaviorSubject(initialState ?? {});
-    this.#pairState = this.#state.pipe(pairwise());
-
-    this.#pairState
-      .pipe(
-        filter(([prev, cur]) => prev != cur),
-        map(([, cur]) => cur)
-      )
-      .subscribe(() => {
-        this.update();
-      });
-  }
-
-  mount($parent) {
-    this.$parent = $parent;
-    this.children = this.template(this.#state.getValue());
-    const rendered = this.children?.mount($parent);
-    const onUnMount = this.onMount();
-
-    this.#unMount(onUnMount);
-
-    return rendered;
-  }
-
-  // Mutation observer 공부하기
-
-  update() {
-    const next = this.template(this.#state.getValue());
-    updateElement(this.children, next, this.$parent);
-  }
-
-  onUpdate() {}
-  onRender() {}
-
-  /**
-   * @param {any} state
-   */
-  template(state) {
-    return null;
-  }
-
-  onMount() {}
-
-  #unMount(onUnmount) {
-    const onObserve = (mutationList, observer) => {
-      if (!this.$parent.contains(this.children.element)) {
-        observer.disconnect();
-        onUnmount();
-      }
-    };
-    const observer = new MutationObserver(onObserve);
-    observer.observe(this.$parent, { childList: true });
-  }
-
-  getState(key) {
-    return this.#state.getValue()[key];
-  }
-
-  getStates() {
-    return this.#state.getValue();
-  }
-
-  setState(key, value) {
-    if (value === this.getState(key)) return;
-    this.#state.next({ ...this.#state.getValue(), [key]: value });
-  }
-}
-
 // update로 children node가 추가되면 Element의 _children에도 반영돼야함.
 
-// export function Component($target, initialState) {}
+// export function Component($target, props) {}
 
 // Component.prototype.update = function () {
 //   console.log("update");
