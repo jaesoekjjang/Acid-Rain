@@ -38,10 +38,17 @@ export function Game({ $canvas, $form, $life }) {
 
   Game.prototype.init = function ({
     wordList,
-    fontSize = 20,
     onGameStart,
     onGameOver,
+    fontSize = 20,
+    fontStyle = "Verdana",
   }) {
+    this.wordList = wordList;
+    this.ctx.font = `${fontSize}px ${fontStyle}`;
+
+    this.onGameStart = onGameStart;
+    this.onGameOver = onGameOver;
+
     this.wordDropManager = new WordDropManager({
       canvas: this.canvas,
       game: this,
@@ -49,12 +56,6 @@ export function Game({ $canvas, $form, $life }) {
       fontSize,
       difficulty: 4,
     });
-
-    this.wordList = wordList;
-    this.ctx.font = `${fontSize}px Verdana`;
-
-    this.onGameStart = onGameStart;
-    this.onGameOver = onGameOver;
   };
 
   Game.prototype.setDifficulty = function (difficulty = 3) {

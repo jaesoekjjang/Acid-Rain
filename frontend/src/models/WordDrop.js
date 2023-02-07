@@ -1,34 +1,39 @@
-export function WordDrop({ canvas, game, text, count }) {
-  this.canvas = canvas;
-  this.ctx = canvas.getContext("2d");
-  this.game = game;
+export function WordDrop({ $canvas, game, text, count }) {
+  this.canvas = $canvas;
+  this.ctx = $canvas.getContext("2d");
+  // this.game = game;
 
   this.text = text;
   this.count = count;
-  this.speed = WordDrop.speed(count);
+  this.speed = 3;
   this.x = WordDrop.x({
-    canvas,
-    fontSize: WordDrop.fontSize,
+    $canvas,
+    fontSize: 20,
     textLength: text.length,
   });
   this.y = 0;
   this.color = "white";
+
+  this.minSpeed = 3;
+  this.maxSpeed = 6;
+  this.fontSize = 20;
 }
 
-WordDrop.init = function ({ minSpeed, maxSpeed, fontSize }) {
-  WordDrop.minSpeed = minSpeed;
-  WordDrop.maxSpeed = maxSpeed;
-  WordDrop.fontSize = fontSize;
-};
+// WordDrop.init = function ({ minSpeed, maxSpeed, fontSize }) {
+//   WordDrop.minSpeed = minSpeed;
+//   WordDrop.maxSpeed = maxSpeed;
+//   WordDrop.fontSize = fontSize;
+// };
 
-WordDrop.speed = function (n) {
-  const { minSpeed, maxSpeed } = WordDrop;
+WordDrop.prototype.calcSpeed = function (n) {
+  const { minSpeed, maxSpeed } = this;
+  console.log(n, minSpeed, maxSpeed);
   const speed = Math.random() + minSpeed * 1.02 ** n;
   return speed > maxSpeed ? maxSpeed : speed;
 };
 
-WordDrop.x = function ({ canvas, fontSize, textLength }) {
-  return Math.random() * (canvas.width - textLength * fontSize);
+WordDrop.x = function ({ $canvas, fontSize, textLength }) {
+  return Math.random() * ($canvas.width - textLength * fontSize);
 };
 
 WordDrop.prototype.hit = function () {
