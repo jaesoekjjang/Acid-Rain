@@ -1,5 +1,4 @@
 import { BehaviorSubject } from "rxjs";
-import { WordDrop } from "./WordDrop";
 
 export function WordDrops() {
   this._drops = new BehaviorSubject({});
@@ -44,10 +43,11 @@ WordDrops.prototype.draw = function (ctx) {
 
 WordDrops.prototype.update = function (life$) {
   Object.values(this._drops.getValue()).forEach((w) => {
-    w.update(this, life$);
+    w.update();
     if (w.isAlive()) return;
+
     this.remove(w.text);
-    life$.sub();
+    life$.next(life$.getValue() - 1);
   });
 };
 

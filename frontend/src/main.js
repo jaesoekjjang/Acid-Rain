@@ -2,33 +2,39 @@ import "../style.css";
 import { Modal } from "./component/Modal";
 import { Component, createElement } from "./Component";
 import { GamePanel } from "./component/GamePanel";
-import { Game } from "./models/Game";
 import { loadText } from "./utils";
 import { init } from "./router";
 import { Ranking } from "./component/Ranking";
 import { animationFrameScheduler, fromEvent } from "rxjs";
-import { game } from "./models/Game2";
+import { Game } from "./models/Game2";
 
 const wordList = (await loadText(import.meta.env.VITE_WORDS_PATH)).split(/\s+/);
 
 class App extends Component {
-  template(state) {
+  template() {
+    const isPlaying = this.getState("isPlaying");
     return createElement("div", null, [
       createElement(GamePanel, {
-        ...state,
+        ...this.getStates(),
+        score: 0,
+        life: 3,
       }),
-      state.isPlaying
-        ? null
-        : createElement(Modal, {
-            ...state,
-            setIsPlaying: (val) => this.setState("isPlaying", val),
-          }),
+      //   isPlaying
+      //     ? null
+      //     : createElement(Modal, {
+      //         ...state,
+      //         setIsPlaying: (val) => this.setState("isPlaying", val),
+      //       }),
     ]);
   }
 
   onMount() {
     const $canvas = document.querySelector("#canvas");
-    game(wordList, $canvas, this.state);
+    const game = new Game(wordList, $canvas, this.state);
+
+    const { getLifeStream, getScoreStream } = game;
+    this.setState("gameLife", getLifeStream());
+    this.setState("gameScore", getScoreStream());
     // const $fieldset = document.querySelector(".game-fieldset");
     // const game = new Game({ $canvas, $form: $fieldset.form });
     // this.setState("game", game);

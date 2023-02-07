@@ -24,7 +24,7 @@ class Element {
     this.tag = tag;
     this.attrs = attrs || {};
     this.children = Array.isArray(children)
-      ? children.filter((x) => x)
+      ? children.filter((x) => x !== undefined || x !== null)
       : [children];
   }
 
@@ -34,6 +34,7 @@ class Element {
       this.element.setAttribute(key, this.attrs[key]);
     });
 
+    console.log($parent);
     $parent.append(this.element);
     this.children.forEach((child) => {
       if (typeof child === "string" || typeof child === "number") {
@@ -70,7 +71,7 @@ export class Component {
 
   mount($parent) {
     this.$parent = $parent;
-    this.children = this.template(this.#state.getValue());
+    this.children = this.template();
     const mounted = this.children?.mount($parent);
 
     const beforeUnmount = this.onMount();
@@ -87,7 +88,7 @@ export class Component {
   onMount() {}
 
   update() {
-    const next = this.template(this.#state.getValue());
+    const next = this.template();
     updateElement(this.children, next, this.$parent);
     this.onUpdate();
   }
@@ -120,17 +121,19 @@ export class Component {
   }
 }
 
+// 중간에 위치한 노드가 바뀔 때 업데이트 에러
+// 업데이트 과정에서 컴포넌트의 children과 parent가 없어짐
 function updateElement(prev, next, $parent, parentElement, index = 0) {
-  if (!prev && next) {
+  if ((prev === null || prev === undefined) && next) {
     next.mount($parent);
     parentElement.children.push(next);
     return;
   }
 
-  if (!next) {
+  if (next === null || next === undefined) {
     $parent.removeChild($parent.childNodes[index]);
     parentElement.children.splice(index, 1);
-    // parentElement.children.splice(index, 1, null); //Bug해결??
+    // parentElement.children.splice(index, 1, null); //Bug FIX
     return;
   }
 
@@ -143,7 +146,10 @@ function updateElement(prev, next, $parent, parentElement, index = 0) {
   }
 
   if (typeof prev.tag === "function" || typeof next.tag === "function") {
-    updateElement(prev.children, next.template(), $parent, prev, index);
+    // next는 children과 parent가 없음.
+    next.children = next.template();
+    next.$parent = $parent;
+    updateElement(prev.children, next.children, $parent, prev, index);
     return;
   }
 

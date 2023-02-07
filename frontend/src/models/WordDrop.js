@@ -1,5 +1,5 @@
 export function WordDrop({ $canvas, game, text, count }) {
-  this.canvas = $canvas;
+  this.$canvas = $canvas;
   this.ctx = $canvas.getContext("2d");
   // this.game = game;
 
@@ -18,12 +18,6 @@ export function WordDrop({ $canvas, game, text, count }) {
   this.maxSpeed = 6;
   this.fontSize = 20;
 }
-
-// WordDrop.init = function ({ minSpeed, maxSpeed, fontSize }) {
-//   WordDrop.minSpeed = minSpeed;
-//   WordDrop.maxSpeed = maxSpeed;
-//   WordDrop.fontSize = fontSize;
-// };
 
 WordDrop.prototype.calcSpeed = function (n) {
   const { minSpeed, maxSpeed } = this;
@@ -70,7 +64,7 @@ WordDrop.prototype.update = function () {
 };
 
 WordDrop.prototype.isAlive = function () {
-  if (this.y <= this.canvas.height + WordDrop.fontSize) return true;
+  if (this.y <= this.$canvas.height + this.fontSize) return true;
   return false;
 };
 
@@ -78,9 +72,8 @@ export class GoldenWordDrop extends WordDrop {
   color = "#ffaf24";
 
   skill() {
-    const { life$ } = this.game;
-
-    life$.add();
+    // const { life$ } = this.game;
+    // life$.add();
   }
 }
 
@@ -88,8 +81,8 @@ export class BlueWordDrop extends WordDrop {
   color = "#097cfb";
 
   skill() {
-    const { words } = this.game;
-    words.stop(3000);
+    // const { words } = this.game;
+    // words.stop(3000);
   }
 }
 
