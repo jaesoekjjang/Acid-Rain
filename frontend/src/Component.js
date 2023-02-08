@@ -24,7 +24,7 @@ class Element {
     this.tag = tag;
     this.attrs = attrs || {};
     this.children = Array.isArray(children)
-      ? children.filter((x) => x !== undefined || x !== null)
+      ? children.filter((x) => x !== undefined && x !== null)
       : [children];
   }
 
@@ -34,7 +34,6 @@ class Element {
       this.element.setAttribute(key, this.attrs[key]);
     });
 
-    console.log($parent);
     $parent.append(this.element);
     this.children.forEach((child) => {
       if (typeof child === "string" || typeof child === "number") {
@@ -99,7 +98,7 @@ export class Component {
     const onObserve = (_, observer) => {
       if (!this.$parent.contains(this.children.element)) {
         this.#state.complete();
-        callback();
+        callback && callback();
         observer.disconnect();
       }
     };
@@ -141,7 +140,10 @@ function updateElement(prev, next, $parent, parentElement, index = 0) {
     (typeof prev === "string" || typeof prev === "number") &&
     (typeof next === "string" || typeof prev === "number")
   ) {
-    if (prev !== next) $parent.innerText = next;
+    if (prev !== next) {
+      $parent.innerText = next;
+      parentElement.children = [next];
+    }
     return;
   }
 

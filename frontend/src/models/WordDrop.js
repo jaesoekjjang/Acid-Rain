@@ -14,8 +14,8 @@ export function WordDrop({ $canvas, game, text, count }) {
   this.y = 0;
   this.color = "white";
 
-  this.minSpeed = 3;
-  this.maxSpeed = 6;
+  this.minSpeed = 30;
+  this.maxSpeed = 40;
   this.fontSize = 20;
 }
 
@@ -39,7 +39,7 @@ WordDrop.prototype.skill = function () {};
 
 WordDrop.prototype.getScore = function () {
   return (
-    ((WordDrop.minSpeed + WordDrop.maxSpeed) / 2) * 40 +
+    ((this.minSpeed + this.maxSpeed) / 2) * 40 +
     this.text.length * 20 +
     20 * 1.1 ** this.count
   );

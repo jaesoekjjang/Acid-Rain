@@ -4,16 +4,13 @@ import("../keyboardControl");
 
 export class GamePanel extends Component {
   template() {
-    const { score, life, gameScore, gameLife } = this.getStates();
+    const { score = 0, life } = this.getStates();
+    const hearts = (n) => "🖤".repeat(3 - n) + "❤️".repeat(n);
 
-    if (gameScore && gameLife) {
-      gameScore.subscribe((score) => this.setState("score", score));
-      gameLife.subscribe((life) => this.setState("life", life));
-    }
     return createElement("div", { class: "game-panel" }, [
       createElement("div", { class: "status" }, [
         createElement("span", { class: "score" }, score),
-        createElement("span", { class: "life" }, life),
+        createElement("span", { class: "life" }, hearts(life)),
       ]),
       createElement("form", { class: "game-form" }, [
         createElement("fieldset", { class: "game-fieldset" }, [

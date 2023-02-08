@@ -1,11 +1,13 @@
-import { fromEvent } from "rxjs";
-import { filter, map, mergeMap, share, tap } from "rxjs/operators";
+import { BehaviorSubject, fromEvent } from "rxjs";
+import { filter, map, mergeMap, share, takeUntil, tap } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import { Component, createElement } from "../Component.js";
 import { routeChange } from "../router.js";
 
 export class Modal extends Component {
   template() {
+    const score = this.getState("score");
+
     return createElement("div", { class: "modal-background" }, [
       createElement("div", { class: "modal" }, [
         createElement("form", { class: "modal-form" }, [
@@ -21,94 +23,77 @@ export class Modal extends Component {
               class: "score-input",
               type: "text",
               name: "score",
-              value: `점`,
+              value: `${score} 점`,
               disabled: true,
             }),
           ]),
           createElement(
             "div",
             null,
-            createElement("button", { class: "register" }, "랭킹 등록하기")
+            createElement(
+              "button",
+              { class: "register button-yellow" },
+              "랭킹 등록하기"
+            )
           ),
         ]),
         createElement("div", null, [
-          createElement("button", { class: "restart" }, "다시하기"),
-          createElement("button", { class: "ranking" }, "랭킹보기"),
+          createElement("button", { class: "restart button-blue" }, "다시하기"),
+          createElement(
+            "button",
+            { class: "link-ranking button-blue" },
+            createElement("a", null, "랭킹보기")
+          ),
         ]),
       ]),
     ]);
   }
 
-  //! 첫 렌더시에만 실행돼야함
-  // onMount() {
-  //   const { setIsPlaying, isPlaying } = this.getStates();
-  //   const clickModal = fromEvent(
-  //     document.querySelector(".modal"),
-  //     "click"
-  //   ).pipe(share());
-
-  //   clickModal
-  //     .pipe(filter((x) => x.target.classList.contains("restart")))
-  //     .subscribe(() => setIsPlaying(false));
-  // }
-
-  // unMount 해야함
   onMount() {
-    const clickModal = fromEvent(
-      document.querySelector(".modal"),
-      "click"
-    ).pipe(share());
-
     const { setIsPlaying, game } = this.getStates();
-    clickModal.subscribe(() => {
-      setIsPlaying(true);
-      game.restart();
-    });
+    const clickModal$ = fromEvent(document.querySelector(".modal"), "click");
 
-    return () => console.log("modal unmounted");
-    // const onClickRegister = clickModal
-    //   .pipe(
-    //     filter((x) => x.target.classList.contains("register")),
-    //     tap((e) => e.preventDefault()),
-    //     map(() => {
-    //       const { name, score } = document.querySelector(".modal-form");
-    //       return { userName: name.value, score: score.value.replace("점", "") };
-    //     }),
-    //     mergeMap((body) =>
-    //       ajax({
-    //         url: `${import.meta.env.VITE_BASE_URL}/game`,
-    //         method: "POST",
-    //         body,
-    //       })
-    //     )
-    //   )
-    //   .subscribe(({ response }) => console.log(response));
+    const registerSubscription = clickModal$
+      .pipe(
+        filter((x) => x.target.classList.contains("register")),
+        tap((e) => e.preventDefault()),
+        map(() => {
+          const { name, score } = document.querySelector(".modal-form");
+          return { userName: name.value, score: score.value.replace("점", "") };
+        }),
+        mergeMap((body) =>
+          ajax({
+            url: `${import.meta.env.VITE_BASE_URL}/game`,
+            method: "POST",
+            body,
+          })
+        )
+      )
+      .subscribe(({ response }) => console.log(response));
 
-    // const onClickRaking = clickModal
-    //   .pipe(
-    //     filter((x) => x.target.classList.contains("ranking"))
-    //     // mergeMap(() =>
-    //     //   ajax({
-    //     //     url: `${import.meta.env.VITE_BASE_URL}/game/ranking`,
-    //     //     method: "GET",
-    //     //   })
-    //     // )
-    //   )
-    //   .subscribe(() => {
-    //     this.getState("game").destroy();
-    //     routeChange("/ranking");
-    //   });
+    const restartSubscription = clickModal$
+      .pipe(filter((x) => x.target.classList.contains("restart")))
+      .subscribe(() => {
+        setIsPlaying(true);
+        game.start();
+      });
 
-    // const onClickRestart = clickModal
-    //   .pipe(filter((x) => x.target.classList.contains("restart")))
-    //   .subscribe(() => {
-    //     const { isPlaying, setIsPlaying, game } = this.getStates();
+    const routeSubscription = clickModal$
+      .pipe(
+        filter((x) => x.target.classList.contains("link-ranking")),
+        tap((e) => {
+          e.preventDefault();
+          game.destroy();
+          routeChange("/ranking");
+        })
+      )
+      .subscribe();
 
-    //     setIsPlaying(!isPlaying);
-    //     game.restart();
-    //   });
-
-    // return [onClickRegister, onClickRaking, onClickRestart];
+    return () => {
+      registerSubscription.unsubscribe();
+      restartSubscription.unsubscribe();
+      routeSubscription.unsubscribe();
+    };
   }
 }
 

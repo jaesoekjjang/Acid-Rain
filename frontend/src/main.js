@@ -5,68 +5,85 @@ import { GamePanel } from "./component/GamePanel";
 import { loadText } from "./utils";
 import { init } from "./router";
 import { Ranking } from "./component/Ranking";
-import { animationFrameScheduler, fromEvent } from "rxjs";
-import { Game } from "./models/Game2";
+import Game from "./Game";
+import Header from "./component/Header";
 
 const wordList = (await loadText(import.meta.env.VITE_WORDS_PATH)).split(/\s+/);
 
 class App extends Component {
   template() {
     const isPlaying = this.getState("isPlaying");
+
+    const { score, life, game } = this.getStates();
+
     return createElement("div", null, [
       createElement(GamePanel, {
-        ...this.getStates(),
-        score: 0,
-        life: 3,
+        score,
+        life,
       }),
-      //   isPlaying
-      //     ? null
-      //     : createElement(Modal, {
-      //         ...state,
-      //         setIsPlaying: (val) => this.setState("isPlaying", val),
-      //       }),
+      isPlaying
+        ? null
+        : createElement(Modal, {
+            game,
+            score,
+            setIsPlaying: (val) => this.setState("isPlaying", val),
+          }),
     ]);
   }
 
   onMount() {
-    const $canvas = document.querySelector("#canvas");
-    const game = new Game(wordList, $canvas, this.state);
+    console.log(this.$parent);
+    const $canvas = document.querySelector("canvas");
+    const $fieldset = document.querySelector(".game-fieldset");
+    const $form = document.querySelector(".game-form");
+    const $input = $form.querySelector(".input");
 
-    const { getLifeStream, getScoreStream } = game;
-    this.setState("gameLife", getLifeStream());
-    this.setState("gameScore", getScoreStream());
-    // const $fieldset = document.querySelector(".game-fieldset");
-    // const game = new Game({ $canvas, $form: $fieldset.form });
-    // this.setState("game", game);
-    // const onGameStart = () => {
-    //   //! 여기서 시작하자마자 한번 리렌더링 됨
-    //   this.setState("isPlaying", true);
-    //   $fieldset.disabled = false;
-    //   document.querySelector(".input").focus();
-    // };
-    // const onGameOver = () => {
-    //   this.setState("isPlaying", false);
-    //   this.setState("score", game.getScore());
-    //   $fieldset.disabled = true;
-    // };
-    // game.init({ wordList, onGameOver, onGameStart });
-    // game.setDifficulty(3);
-    // game.start();
+    const onGameStart = () => {
+      this.setState("isPlaying", true);
+      $fieldset.disabled = false;
+      $input.focus();
+    };
+    const onGameOver = () => {
+      this.setState("isPlaying", false);
+      $fieldset.disabled = true;
+    };
+
+    const game = Game.getInstance(wordList, $canvas, $form);
+    game.onGameStart = onGameStart;
+    game.onGameOver = onGameOver;
+    this.setState("game", game);
+
+    game.start();
+
+    game.getLifeStream().subscribe((life) => {
+      this.setState("life", life);
+    });
+    game.getScoreStream().subscribe((score) => this.setState("score", score));
   }
 }
 
 const route = () => {
   const { pathname } = location;
+  const $root = document.querySelector("#root");
+  $root.innerHTML = "";
 
   if (pathname === "/") {
+    const $app = document.createElement("div");
+    $app.setAttribute("id", "app");
+
     const canvas = document.createElement("CANVAS");
-    canvas.setAttribute("id", "canvas");
-    document.body.insertBefore(canvas, document.body.firstChild);
-    new App({ isPlaying: true }).mount(document.querySelector("#app"));
+
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
+
+    $root.insertAdjacentElement("afterbegin", canvas);
+    $root.insertAdjacentElement("beforeend", $app);
+
+    new App({ isPlaying: true }).mount($app);
   }
 
   if (pathname === "/ranking") {
-    new Ranking().mount(document.querySelector("#app"));
+    new Ranking().mount($root);
   }
 };
 
