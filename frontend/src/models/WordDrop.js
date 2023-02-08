@@ -5,25 +5,24 @@ export function WordDrop({ $canvas, game, text, count }) {
 
   this.text = text;
   this.count = count;
-  this.speed = 3;
   this.x = WordDrop.x({
     $canvas,
     fontSize: 20,
     textLength: text.length,
   });
   this.y = 0;
-  this.color = "white";
 
-  this.minSpeed = 30;
-  this.maxSpeed = 40;
+  this.minSpeed = 3;
+  this.maxSpeed = 8;
+  this.speed = this.calcSpeed(count);
+
+  this.color = "white";
   this.fontSize = 20;
 }
 
 WordDrop.prototype.calcSpeed = function (n) {
-  const { minSpeed, maxSpeed } = this;
-  console.log(n, minSpeed, maxSpeed);
-  const speed = Math.random() + minSpeed * 1.02 ** n;
-  return speed > maxSpeed ? maxSpeed : speed;
+  const speed = Math.random() + this.minSpeed * 1.02 ** n;
+  return speed > this.maxSpeed ? this.maxSpeed : speed;
 };
 
 WordDrop.x = function ({ $canvas, fontSize, textLength }) {

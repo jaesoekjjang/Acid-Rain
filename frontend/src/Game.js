@@ -5,7 +5,6 @@ import {
   interval,
   map,
   scan,
-  animationFrameScheduler,
   startWith,
   withLatestFrom,
   of,
@@ -20,6 +19,7 @@ import {
   timer,
   range,
   timeInterval,
+  concatMap,
 } from "rxjs";
 import { BlueWordDrop, GoldenWordDrop, WordDrop } from "./models/WordDrop";
 import { WordDrops } from "./models/WordDrops";
@@ -32,6 +32,10 @@ Game.getInstance = function (wordList, $canvas, $form) {
   } else {
     return Game._instance;
   }
+};
+
+const randomInterval = (min, max) => {
+  return min + Math.random() * (max - min);
 };
 
 export default function Game(wordList, $canvas, $form) {
@@ -68,7 +72,12 @@ Game.prototype.start = function () {
   this.life$.next(3);
   this.score$.next(0);
 
-  const words$ = interval(3000).pipe(
+  const interval$ = timer(randomInterval(1500, 3000)).pipe(
+    repeat(),
+    scan((prev) => prev + 1, 0)
+  );
+
+  const words$ = interval$.pipe(
     map((n) => ({
       text: this.wordList[n],
       $canvas: this.$canvas,
