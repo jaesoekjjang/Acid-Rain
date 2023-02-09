@@ -63,8 +63,12 @@ export class Modal extends Component {
         tap((e) => e.preventDefault()),
         map(() => {
           const { name, score } = document.querySelector(".modal-form");
-          return { userName: name.value, score: score.value.replace("점", "") };
+          return {
+            userName: name.value,
+            score: score.value.replace(" 점", ""),
+          };
         }),
+        tap(console.log),
         mergeMap((body) =>
           ajax({
             url: `${import.meta.env.VITE_BASE_URL}/game`,

@@ -12,7 +12,7 @@ export default class GamePage extends Component {
 
     const { score, life, game } = this.getStates();
 
-    return createElement("div", null, [
+    return createElement("div", { class: "game-page" }, [
       createElement(GamePanel, {
         score,
         life,
@@ -28,7 +28,7 @@ export default class GamePage extends Component {
   }
 
   onMount() {
-    console.log(this.$parent);
+    import("../keyboardControl.js");
     const $canvas = document.querySelector("canvas");
     const $fieldset = document.querySelector(".game-fieldset");
     const $form = document.querySelector(".game-form");

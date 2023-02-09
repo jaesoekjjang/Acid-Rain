@@ -38,6 +38,9 @@ const randomInterval = (min, max) => {
   return min + Math.random() * (max - min);
 };
 
+const enterEffect = new Audio("/enter-effect.wav");
+const singleKeyEffect = new Audio("/single-key.wav");
+
 export default function Game(wordList, $canvas, $form) {
   this.wordList = wordList;
   this.subscriptions = [];
@@ -105,6 +108,7 @@ Game.prototype.start = function () {
     withLatestFrom(words$),
     map(([input, words]) => words.hit(input)),
     tap((score) => {
+      score && enterEffect.play();
       this.score$.next(this.score$.getValue() + score);
       this.$form.reset();
     })

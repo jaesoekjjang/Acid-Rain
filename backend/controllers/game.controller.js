@@ -15,7 +15,7 @@ export const gameRouter = (GameService, UserService) => {
     async (req, res, next) => {
       const { userName, score } = req.body;
       let { id: userId } = await UserService.findByName(userName);
-
+      console.log(userName, score);
       if (userId === -1) {
         userId = await UserService.create(userName);
       }
