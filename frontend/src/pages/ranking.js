@@ -1,9 +1,9 @@
 import { take } from "rxjs";
 import { ajax } from "rxjs/ajax";
 import { Component, createElement } from "../Component.js";
-import Header from "./Header.js";
+import Header from "../component/Header.js";
 
-export class Ranking extends Component {
+export default class RankingPage extends Component {
   template() {
     const ranking = this.getState("ranking");
     return createElement("div", { class: "ranking" }, [

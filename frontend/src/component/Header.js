@@ -6,14 +6,14 @@ export default class Header extends Component {
   template() {
     return createElement("header", { class: "header" }, [
       createElement(
-        "div",
+        "a",
         null,
-        createElement("a", { class: "link-home" }, "메인으로")
+        createElement("span", { class: "link-home link-button " }, "RX 산성비")
       ),
       createElement(
-        "div",
+        "a",
         null,
-        createElement("a", { class: "link-ranking" }, "랭킹보기")
+        createElement("span", { class: "link-ranking link-button" }, "랭킹보기")
       ),
     ]);
   }
@@ -24,13 +24,20 @@ export default class Header extends Component {
     const homeRouteSubscription = clickHeader$
       .pipe(
         filter((x) => x.target.classList.contains("link-home")),
-        tap((e) => {
-          e.preventDefault();
-          routeChange("/");
-        })
+        tap((e) => e.preventDefault())
       )
-      .subscribe();
+      .subscribe(() => routeChange("/"));
 
-    return () => homeRouteSubscription.unsubscribe();
+    const rankingRouteSubscription = clickHeader$
+      .pipe(
+        filter((x) => x.target.classList.contains("link-ranking")),
+        tap((e) => e.preventDefault())
+      )
+      .subscribe(() => routeChange("/ranking"));
+
+    return () => {
+      homeRouteSubscription.unsubscribe();
+      rankingRouteSubscription.unsubscribe();
+    };
   }
 }

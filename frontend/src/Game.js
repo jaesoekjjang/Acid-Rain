@@ -72,7 +72,7 @@ Game.prototype.start = function () {
   this.life$.next(3);
   this.score$.next(0);
 
-  const interval$ = timer(randomInterval(1500, 3000)).pipe(
+  const interval$ = timer(randomInterval(800, 1000)).pipe(
     repeat(),
     scan((prev) => prev + 1, 0)
   );
@@ -104,8 +104,10 @@ Game.prototype.start = function () {
     map((e) => e?.target?.querySelector(".input").value),
     withLatestFrom(words$),
     map(([input, words]) => words.hit(input)),
-    tap((score) => this.score$.next(this.score$.getValue() + score)),
-    tap(() => this.$form.reset())
+    tap((score) => {
+      this.score$.next(this.score$.getValue() + score);
+      this.$form.reset();
+    })
   );
 
   const render$ = animationFrames().pipe(combineLatestWith(words$));
@@ -148,6 +150,8 @@ Game.prototype.getScoreStream = function () {
 Game.prototype.destroy = function () {
   this.life$.complete();
   this.score$.complete();
-  this.over();
+  this.subscriptions.forEach((sub) => sub.unsubscribe());
   Game._instance = null;
 };
+
+function GamePreview() {}

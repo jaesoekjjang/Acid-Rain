@@ -13,7 +13,7 @@ export function WordDrop({ $canvas, game, text, count }) {
   this.y = 0;
 
   this.minSpeed = 3;
-  this.maxSpeed = 8;
+  this.maxSpeed = 6.5;
   this.speed = this.calcSpeed(count);
 
   this.color = "white";

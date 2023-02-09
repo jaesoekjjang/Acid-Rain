@@ -32,17 +32,21 @@ export class Modal extends Component {
             null,
             createElement(
               "button",
-              { class: "register button-yellow" },
+              { class: "register btn btn-yellow" },
               "랭킹 등록하기"
             )
           ),
         ]),
         createElement("div", null, [
-          createElement("button", { class: "restart button-blue" }, "다시하기"),
           createElement(
             "button",
-            { class: "link-ranking button-blue" },
-            createElement("a", null, "랭킹보기")
+            { class: "restart btn btn-blue" },
+            "다시하기"
+          ),
+          createElement(
+            "button",
+            { class: "link-ranking btn btn-blue" },
+            "랭킹보러 가기"
           ),
         ]),
       ]),
@@ -81,13 +85,12 @@ export class Modal extends Component {
     const routeSubscription = clickModal$
       .pipe(
         filter((x) => x.target.classList.contains("link-ranking")),
-        tap((e) => {
-          e.preventDefault();
-          game.destroy();
-          routeChange("/ranking");
-        })
+        tap((e) => e.preventDefault())
       )
-      .subscribe();
+      .subscribe(() => {
+        game.destroy();
+        routeChange("/ranking");
+      });
 
     return () => {
       registerSubscription.unsubscribe();

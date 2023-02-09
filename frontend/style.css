@@ -13,6 +13,9 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 
+  --text-color: rgb(218, 218, 218);
+  --text-hover: #8cb4ff;
+
   --button-blue: #0d66d0;
   --button-blue-hover: #097cfb;
 
@@ -48,7 +51,7 @@ h1 {
   line-height: 1.1;
 }
 
-button {
+.btn {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -60,24 +63,53 @@ button {
   color: white;
 }
 
-.button-blue {
+.btn-blue {
   background-color: var(--button-blue);
 }
 
-.button-blue:hover {
+.btn-blue:hover {
   background-color: var(--button-blue-hover);
 }
 
-.button-yellow {
+.btn-yellow {
   background: var(--button-yellow);
 }
 
-.button-yellow:hover {
+.btn-yellow:hover {
   background: var(--button-yellow-hover);
 }
 
 canvas {
   background-color: #242424;
+}
+
+.content {
+  width: 100%;
+  height: calc(100vh - 64px);
+  background-image: url("/AcidRain.gif");
+  background-size: cover;
+}
+
+.center {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  color: var(--text-color);
+}
+
+.title:hover {
+  color: var(--text-hover);
+  cursor: pointer;
 }
 
 .status {
@@ -249,15 +281,32 @@ ol {
 }
 
 header {
-  padding: 1rem;
-  background-color: var(--button-blue-hover);
+  position: sticky;
+  top: 0;
   display: flex;
   justify-content: space-between;
-  color: #213547;
+  align-items: center;
+  height: 64px;
+  padding: 0 1rem;
+  background-color: #1b1b1b;
+}
+
+.link-button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 header a {
-  color: #213547;
+  color: var(--text-color);
+}
+
+header a:hover {
+  color: #8cb4ff;
 }
 
 .modal-background {

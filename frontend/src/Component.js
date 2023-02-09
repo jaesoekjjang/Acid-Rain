@@ -120,8 +120,6 @@ export class Component {
   }
 }
 
-// 중간에 위치한 노드가 바뀔 때 업데이트 에러
-// 업데이트 과정에서 컴포넌트의 children과 parent가 없어짐
 function updateElement(prev, next, $parent, parentElement, index = 0) {
   if ((prev === null || prev === undefined) && next) {
     next.mount($parent);
@@ -132,7 +130,6 @@ function updateElement(prev, next, $parent, parentElement, index = 0) {
   if (next === null || next === undefined) {
     $parent.removeChild($parent.childNodes[index]);
     parentElement.children.splice(index, 1);
-    // parentElement.children.splice(index, 1, null); //Bug FIX
     return;
   }
 
@@ -171,7 +168,6 @@ function updateElement(prev, next, $parent, parentElement, index = 0) {
 
   const maxLength = Math.max(prev.children.length, next.children.length);
 
-  // Bug: 중간에 있던 요소가 사라지면 그 뒤의 요소들은 새로운 요소로 판단되어 중복 추가된다.
   for (let i = 0; i < maxLength; i++) {
     updateElement(
       prev.children[i],
