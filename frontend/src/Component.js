@@ -25,7 +25,7 @@ class Element {
     this.attrs = attrs || {};
     this.children = Array.isArray(children)
       ? children.filter((x) => x !== undefined && x !== null)
-      : [children];
+      : [children].filter((x) => x !== undefined && x !== null);
   }
 
   mount($parent) {
@@ -62,7 +62,7 @@ export class Component {
     }
     this.tag = this.constructor;
     this.#state = new BehaviorSubject(props ?? {});
-    this.#state.pipe(skip(1)).subscribe(() => {
+    this.#state.pipe(skip(1)).subscribe((val) => {
       this.update();
       this.onUpdate();
     });
@@ -88,7 +88,7 @@ export class Component {
 
   update() {
     const next = this.template();
-    updateElement(this.children, next, this.$parent);
+    updateElement(this.children, next, this.$parent, this);
     this.onUpdate();
   }
 
@@ -120,36 +120,74 @@ export class Component {
   }
 }
 
-function updateElement(prev, next, $parent, parentElement, index = 0) {
+function updateElement(prev, next, $parent, parentComponent, index = 0) {
   if ((prev === null || prev === undefined) && next) {
-    next.mount($parent);
-    parentElement.children.push(next);
+    if (typeof next === "object") {
+      next.mount($parent);
+    } else {
+      $parent.innerText = next;
+    }
+    parentComponent.children.push(next);
     return;
   }
 
   if (next === null || next === undefined) {
     $parent.removeChild($parent.childNodes[index]);
-    parentElement.children.splice(index, 1);
+    parentComponent.children.splice(index, 1);
     return;
   }
 
   if (
     (typeof prev === "string" || typeof prev === "number") &&
-    (typeof next === "string" || typeof prev === "number")
+    (typeof next === "string" || typeof next === "number")
   ) {
     if (prev !== next) {
       $parent.innerText = next;
-      parentElement.children = [next];
+      parentComponent.children = [next];
     }
     return;
   }
 
+  if (typeof prev.tag === "function" && typeof next.tag === "function") {
+    // 둘이 다른 컴포넌트이고, 부모가 엘리먼트인 경우
+    if (prev.tag !== next.tag) {
+      if (parentComponent instanceof Element) {
+        $parent.removeChild(prev.children.element);
+        next.mount($parent);
+        parentComponent.children.splice(index, 1, next);
+        return;
+      }
+
+      //Bug: Wrapper Element가 없을 때: 의도대로 동작하지 않음
+      if (parentComponent instanceof Component) {
+        $parent.removeChild(prev.children.element);
+        next.mount($parent);
+        parentComponent.children = next;
+        return;
+      }
+    }
+  }
+  // 컴포넌트간 업데이트 기능 추가
   if (typeof prev.tag === "function" || typeof next.tag === "function") {
-    // next는 children과 parent가 없음.
-    next.children = next.template();
-    next.$parent = $parent;
-    updateElement(prev.children, next.children, $parent, prev, index);
-    return;
+    //! next가 컴포넌트일 때
+    if (typeof next.tag === "function") {
+      // 1. prev가 TextNode일 때
+
+      // 2. prev가 Element일 때
+      next.children = next.template();
+      return updateElement(prev.children, next.children, $parent, prev, index);
+    }
+
+    //Bug: Wrapper Element가 없을 때: 의도대로 동작하지 않음
+    if (parentComponent instanceof Component) {
+      return updateElement(
+        prev.children,
+        next,
+        $parent,
+        parentComponent,
+        index
+      );
+    }
   }
 
   if (typeof prev.tag !== typeof next.tag) {
@@ -178,19 +216,3 @@ function updateElement(prev, next, $parent, parentElement, index = 0) {
     );
   }
 }
-
-// update로 children node가 추가되면 Element의 _children에도 반영돼야함.
-
-// export function Component($target, props) {}
-
-// Component.prototype.update = function () {
-//   console.log("update");
-// };
-
-// Function.prototype.extend = function (Constructor) {
-//   this.prototype = Constructor.prototype;
-//   this.prototype.constructor = this;
-// };
-
-// const comp = new Component();
-// comp.update();

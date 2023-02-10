@@ -9,7 +9,6 @@ export const init = (onRouteChange) => {
 
 // URL을 업데이트하고 커스텀 이벤트를 발생시키는 함수
 export const routeChange = (url, params) => {
-  console.log(url);
   history.pushState(null, null, url);
   window.dispatchEvent(new CustomEvent(ROUTE_CHANGE_EVENT, params));
 };

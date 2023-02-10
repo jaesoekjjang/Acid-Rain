@@ -39,7 +39,6 @@ const randomInterval = (min, max) => {
 };
 
 const enterEffect = new Audio("/enter-effect.wav");
-const singleKeyEffect = new Audio("/single-key.wav");
 
 export default function Game(wordList, $canvas, $form) {
   this.wordList = wordList;
@@ -75,7 +74,7 @@ Game.prototype.start = function () {
   this.life$.next(3);
   this.score$.next(0);
 
-  const interval$ = timer(randomInterval(800, 1000)).pipe(
+  const interval$ = timer(randomInterval(800, 1400)).pipe(
     repeat(),
     scan((prev) => prev + 1, 0)
   );

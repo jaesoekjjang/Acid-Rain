@@ -9,28 +9,22 @@ const wordList = (await loadText(import.meta.env.VITE_WORDS_PATH)).split(/\s+/);
 
 export default class HomePage extends Component {
   template() {
-    return createElement("div", { class: "home" }, [
+    return createElement("div", { class: "home-page" }, [
       createElement(Header),
-      createElement(
-        "div",
-        {
-          class: "content",
-        },
-        [
-          createElement("div", { class: "center" }, [
-            createElement("h1", { class: "title" }, "Rx 산성비"),
+      createElement("div", { class: "content" }, [
+        createElement("div", { class: "center" }, [
+          createElement("h1", { class: "title" }, "Rx 산성비"),
+          createElement(
+            "a",
+            null,
             createElement(
-              "a",
-              null,
-              createElement(
-                "button",
-                { class: "link-game btn btn-blue" },
-                "게임시작"
-              )
-            ),
-          ]),
-        ]
-      ),
+              "button",
+              { class: "link-game btn btn-blue" },
+              "게임시작"
+            )
+          ),
+        ]),
+      ]),
     ]);
   }
 

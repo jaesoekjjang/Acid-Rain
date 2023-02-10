@@ -86,15 +86,27 @@ h1 {
   background: var(--button-yellow-hover);
 }
 
+.btn-disabled {
+  background: var(--background-gray);
+  cursor: default;
+}
+
 canvas {
   background-color: #242424;
 }
 
 .content {
   width: 100%;
+}
+
+.home-page > .content {
   height: calc(100vh - 64px);
   background-image: url("/AcidRain.gif");
   background-size: cover;
+}
+
+.ranking-page > .content {
+  padding: 50px 0;
 }
 
 .center {
@@ -216,6 +228,7 @@ ol {
   padding: 0;
   outline: none;
   background: none;
+  border: 1rem;
 }
 
 .submit:active .enter {
@@ -235,7 +248,7 @@ ol {
 
 .rank-table-container {
   width: 1200px;
-  margin: 50px auto;
+  margin: auto;
 }
 
 .rank-table {
@@ -282,10 +295,6 @@ ol {
 .col-score {
   flex: 0 0 auto;
   width: 20%;
-}
-
-.ranking {
-  font-size: 1rem;
 }
 
 header {

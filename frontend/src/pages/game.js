@@ -13,6 +13,11 @@ export default class GamePage extends Component {
     const { score, life, game } = this.getStates();
 
     return createElement("div", { class: "game-page" }, [
+      createElement("canvas", {
+        id: "canvas",
+        width: document.body.clientWidth,
+        height: document.body.clientHeight,
+      }),
       createElement(GamePanel, {
         score,
         life,
@@ -28,7 +33,7 @@ export default class GamePage extends Component {
   }
 
   onMount() {
-    import("../keyboardControl.js");
+    // import("../keyboardControl.js");
     const $canvas = document.querySelector("canvas");
     const $fieldset = document.querySelector(".game-fieldset");
     const $form = document.querySelector(".game-form");
@@ -55,5 +60,7 @@ export default class GamePage extends Component {
       this.setState("life", life);
     });
     game.getScoreStream().subscribe((score) => this.setState("score", score));
+
+    return () => game.destroy();
   }
 }

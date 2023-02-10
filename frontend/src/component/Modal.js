@@ -1,5 +1,14 @@
 import { BehaviorSubject, fromEvent } from "rxjs";
-import { filter, map, mergeMap, share, takeUntil, tap } from "rxjs/operators";
+import {
+  debounce,
+  filter,
+  map,
+  mergeMap,
+  share,
+  takeUntil,
+  tap,
+  throttleTime,
+} from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import { Component, createElement } from "../Component.js";
 import { routeChange } from "../router.js";
@@ -59,8 +68,9 @@ export class Modal extends Component {
 
     const registerSubscription = clickModal$
       .pipe(
-        filter((x) => x.target.classList.contains("register")),
+        filter((e) => e.target.classList.contains("register")),
         tap((e) => e.preventDefault()),
+        throttleTime(1000),
         map(() => {
           const { name, score } = document.querySelector(".modal-form");
           return {
@@ -68,7 +78,6 @@ export class Modal extends Component {
             score: score.value.replace(" 점", ""),
           };
         }),
-        tap(console.log),
         mergeMap((body) =>
           ajax({
             url: `${import.meta.env.VITE_BASE_URL}/game`,
@@ -77,10 +86,17 @@ export class Modal extends Component {
           })
         )
       )
-      .subscribe(({ response }) => console.log(response));
+      .subscribe({
+        next: () => {
+          routeChange("/ranking");
+        },
+        error: (error) => {
+          console.log(error);
+        },
+      });
 
     const restartSubscription = clickModal$
-      .pipe(filter((x) => x.target.classList.contains("restart")))
+      .pipe(filter((e) => e.target.classList.contains("restart")))
       .subscribe(() => {
         setIsPlaying(true);
         game.start();
@@ -88,13 +104,10 @@ export class Modal extends Component {
 
     const routeSubscription = clickModal$
       .pipe(
-        filter((x) => x.target.classList.contains("link-ranking")),
+        filter((e) => e.target.classList.contains("link-ranking")),
         tap((e) => e.preventDefault())
       )
-      .subscribe(() => {
-        game.destroy();
-        routeChange("/ranking");
-      });
+      .subscribe(() => routeChange("/ranking"));
 
     return () => {
       registerSubscription.unsubscribe();
