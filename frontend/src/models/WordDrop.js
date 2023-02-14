@@ -1,7 +1,19 @@
+import {
+  delay,
+  exhaustMap,
+  merge,
+  mergeMap,
+  switchMap,
+  take,
+  tap,
+  timeout,
+  timer,
+} from "rxjs";
+
 export function WordDrop({ $canvas, game, text, count }) {
+  this.game = game;
   this.$canvas = $canvas;
   this.ctx = $canvas.getContext("2d");
-  // this.game = game;
 
   this.text = text;
   this.count = count;
@@ -15,6 +27,7 @@ export function WordDrop({ $canvas, game, text, count }) {
   this.minSpeed = 2.5;
   this.maxSpeed = 6.5;
   this.speed = this.calcSpeed(count);
+  this.pauseTimer;
 
   this.color = "white";
   this.fontSize = 20;
@@ -44,10 +57,11 @@ WordDrop.prototype.getScore = function () {
   );
 };
 
-WordDrop.prototype.stop = function (time = 3000) {
+WordDrop.prototype.freeze = function (time = 3000) {
+  clearTimeout(this.pauseTimer);
   const ogSpeed = this.speed;
   this.speed = 0;
-  setTimeout(() => (this.speed = ogSpeed), time);
+  this.pauseTimer = setTimeout(() => (this.speed = ogSpeed), time);
   return;
 };
 
@@ -71,8 +85,8 @@ export class GoldenWordDrop extends WordDrop {
   color = "#ffaf24";
 
   skill() {
-    // const { life$ } = this.game;
-    // life$.add();
+    const { life } = this.game;
+    life.increase();
   }
 }
 
@@ -80,11 +94,31 @@ export class BlueWordDrop extends WordDrop {
   color = "#097cfb";
 
   skill() {
-    // const { words } = this.game;
-    // words.stop(3000);
+    // words.freeze(3000);
+    // pause$.next(true);
+
+    // pause$
+    //   .pipe(
+    //     mergeMap(() => timer(3000)),
+    //     take(1)
+    //   )
+    //   .subscribe((paused) => {
+    //     if (!paused) {
+    //       pause$.next(false);
+    //     }
+    //   });
+    const { words, pause$ } = this.game;
+    pause$.pipe(switchMap(() => timer(WordDrop.PAUSE_TIME))).subscribe(() => {
+      pause$.next(false);
+    });
+
+    words.freeze(WordDrop.PAUSE_TIME);
+    pause$.next(true);
   }
 }
 
 WordDrop.COMMON = "common";
 WordDrop.GOLD = "gold";
 WordDrop.BLUE = "blue";
+
+WordDrop.PAUSE_TIME = 1500;

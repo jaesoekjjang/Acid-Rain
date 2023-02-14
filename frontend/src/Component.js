@@ -62,7 +62,7 @@ export class Component {
     }
     this.tag = this.constructor;
     this.#state = new BehaviorSubject(props ?? {});
-    this.#state.pipe(skip(1)).subscribe((val) => {
+    this.#state.pipe(skip(1)).subscribe(() => {
       this.update();
       this.onUpdate();
     });
@@ -71,6 +71,10 @@ export class Component {
   mount($parent) {
     this.$parent = $parent;
     this.children = this.template();
+    if (this.children instanceof Component) {
+      throw new Error("하나 이상의 Element로 컴포넌트를 감싸야 합니다.");
+    }
+
     const mounted = this.children?.mount($parent);
 
     const beforeUnmount = this.onMount();
@@ -95,6 +99,8 @@ export class Component {
   onUpdate() {}
 
   #unmount(callback) {
+    // Mutation Observer를 이용한 방식으로 인해 반드시 최상위 Wrapper Element가 필요함.
+    // 그렇지 않으면 원치 않는 순간에 unmout가 발생
     const onObserve = (_, observer) => {
       if (!this.$parent.contains(this.children.element)) {
         this.#state.complete();
@@ -137,6 +143,7 @@ function updateElement(prev, next, $parent, parentComponent, index = 0) {
     return;
   }
 
+  // next만 TextNode일 떄로 수정
   if (
     (typeof prev === "string" || typeof prev === "number") &&
     (typeof next === "string" || typeof next === "number")
@@ -158,7 +165,6 @@ function updateElement(prev, next, $parent, parentComponent, index = 0) {
         return;
       }
 
-      //Bug: Wrapper Element가 없을 때: 의도대로 동작하지 않음
       if (parentComponent instanceof Component) {
         $parent.removeChild(prev.children.element);
         next.mount($parent);
@@ -173,12 +179,18 @@ function updateElement(prev, next, $parent, parentComponent, index = 0) {
     if (typeof next.tag === "function") {
       // 1. prev가 TextNode일 때
 
+      // if (typeof prev === "string" || typeof prev === "number") {
+      // $parent.replaceChild(next.mount($parent), $parent.childNodes[index]);
+      // console.log($parent, parentComponent, parentComponent.children);
+      // parentComponent.children.splice(index, 1, next);
+      // return;
+      // }
+
       // 2. prev가 Element일 때
       next.children = next.template();
       return updateElement(prev.children, next.children, $parent, prev, index);
     }
 
-    //Bug: Wrapper Element가 없을 때: 의도대로 동작하지 않음
     if (parentComponent instanceof Component) {
       return updateElement(
         prev.children,

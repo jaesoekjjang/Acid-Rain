@@ -12,7 +12,6 @@ const router = (path) => {
     {
       "/game": GamePage,
       "/ranking": RankingPage,
-      "/": HomePage,
     }[path] || HomePage
   );
 };
@@ -33,11 +32,10 @@ class App extends Component {
 
   template() {
     const path = this.getState("path");
-    return createElement("div", { class: " app" }, createElement(router(path)));
+    return createElement("div", null, createElement(router(path)));
   }
 
   onMount() {
-    console.log(this.$parent);
     this.route();
   }
 }

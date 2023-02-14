@@ -6,12 +6,14 @@ export function WordDrops() {
 
 WordDrops.prototype.add = function (key, value) {
   this._drops.next({ ...this._drops.getValue(), [key]: value });
+  return this;
 };
 
 WordDrops.prototype.remove = function (key) {
   const newValue = { ...this._drops.getValue() };
   delete newValue[key];
   this._drops.next(newValue);
+  return this;
 };
 
 WordDrops.prototype.has = function (key) {
@@ -31,8 +33,8 @@ WordDrops.prototype.hit = function (key) {
   return score;
 };
 
-WordDrops.prototype.stop = function (time) {
-  Object.values(this._drops.getValue()).forEach((d) => d.stop(time));
+WordDrops.prototype.freeze = function (time) {
+  Object.values(this._drops.getValue()).forEach((d) => d.freeze(time));
 };
 
 WordDrops.prototype.draw = function (ctx) {
@@ -41,13 +43,13 @@ WordDrops.prototype.draw = function (ctx) {
   });
 };
 
-WordDrops.prototype.update = function (life$) {
+WordDrops.prototype.update = function (life) {
   Object.values(this._drops.getValue()).forEach((w) => {
     w.update();
     if (w.isAlive()) return;
 
     this.remove(w.text);
-    life$.next(life$.getValue() - 1);
+    life.decrease();
   });
 };
 

@@ -10,7 +10,7 @@ export default class GamePage extends Component {
   template() {
     const isPlaying = this.getState("isPlaying");
 
-    const { score, life, game } = this.getStates();
+    const { score, life, isMuted, game } = this.getStates();
 
     return createElement("div", { class: "game-page" }, [
       createElement("canvas", {
@@ -21,6 +21,7 @@ export default class GamePage extends Component {
       createElement(GamePanel, {
         score,
         life,
+        game,
       }),
       isPlaying
         ? null
