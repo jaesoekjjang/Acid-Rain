@@ -1,6 +1,11 @@
-import mysqlLoader from "./mysql.js";
+import { container } from "./container.js";
+import { mysqlLoader } from "./db.js";
+import { expressLoader } from "./express.js";
 
 export default async (app) => {
-  const mysqlPool = await mysqlLoader();
-  return { mysqlPool };
+  expressLoader(app);
+
+  const pool = await mysqlLoader();
+
+  await container(app, pool);
 };

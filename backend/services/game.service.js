@@ -1,40 +1,21 @@
-import { mysqlPool } from "../app.js";
-
 export class GameService {
-  constructor() {
-    // this.gameRepository = gameRepository;
+  constructor(userService, gameRepository) {
+    this.userService = userService;
+    this.gameRepository = gameRepository;
   }
 
-  async save({ userId, score }) {
-    try {
-      const [row] = await mysqlPool.execute(
-        `insert into game(user_id, score)
-          values(${userId}, ${score})`
-      );
-      return "" + row.insertId;
-    } catch (err) {
-      console.error(err);
+  async saveByUserName({ userName, score }) {
+    let { id: userId } = await this.userService.findByName(userName);
+
+    if (userId === -1) {
+      userId = await this.userService.create(userName);
     }
-    // await this.gameRepository.create(game);
+
+    return await this.gameRepository.save({ userId, score });
   }
 
+  //! limit에 prepared statement 사용 불가
   async getRanking(n = 100) {
-    try {
-      const [rows] = await mysqlPool.execute(
-        `select g.score, u.name
-          from game g 
-            inner join user u
-              on g.user_id = u.id
-        where g.score > 0
-        order by score desc 
-        limit ${n}`
-      );
-      return rows;
-    } catch (err) {
-      console.error(err);
-    }
-    // return await this.gameRepository.getTopRanks(n);
+    return await this.gameRepository.getRanking(n);
   }
-
-  // {userId, score}
 }

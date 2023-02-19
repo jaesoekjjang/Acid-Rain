@@ -2,34 +2,28 @@ import {
   fromEvent,
   BehaviorSubject,
   tap,
-  interval,
   map,
   scan,
   startWith,
   withLatestFrom,
-  of,
   animationFrames,
-  mergeMap,
-  combineLatest,
   combineLatestWith,
-  filter,
   repeat,
-  delay,
-  switchMap,
   timer,
-  range,
-  timeInterval,
-  concatMap,
   Subject,
+  share,
 } from "rxjs";
 import { Life } from "./models/Life";
 import { BlueWordDrop, GoldenWordDrop, WordDrop } from "./models/WordDrop";
 import { WordDrops } from "./models/WordDrops";
-import { pausable } from "./utils";
+import { pausable, randomBetween } from "./utils";
 
-Game.getInstance = function (wordList, $canvas, $form) {
+const hitEffect = new Audio("/enter-effect.wav");
+hitEffect.volume = 0.5;
+
+Game.getInstance = function (textList, $canvas, $form) {
   if (!Game._instance) {
-    const game = new Game(wordList, $canvas, $form);
+    const game = new Game(textList, $canvas, $form);
     Game._instance = game;
     return game;
   } else {
@@ -37,15 +31,8 @@ Game.getInstance = function (wordList, $canvas, $form) {
   }
 };
 
-const randomInterval = (min, max) => {
-  return min + Math.random() * (max - min);
-};
-
-const keyboardEffect = new Audio("/enter-effect.wav");
-// keyboardEffect.muted = false;
-
-export default function Game(wordList, $canvas, $form) {
-  this.wordList = wordList;
+export default function Game(textList, $canvas, $form) {
+  this.textList = textList;
   this.subscriptions = [];
 
   this.$canvas = $canvas;
@@ -60,7 +47,7 @@ export default function Game(wordList, $canvas, $form) {
   this.life = new Life();
   this.life.subscribe((life) => life || this.over());
 
-  this.keyboardEffect = keyboardEffect;
+  this.hitEffect = hitEffect;
 
   this._onGameStart;
   this._onGameOver;
@@ -77,33 +64,34 @@ Game.prototype = {
 };
 
 Game.prototype.start = function () {
-  this.wordList.sort(() => Math.random() - 0.5);
+  this.ctx.clearRect(0, 0, this.$canvas.clientWidth, this.$canvas.clientHeight);
+  this.textList.sort(() => Math.random() - 0.5);
   this.life.reset();
   this.score$.next(0);
 
   this.pause$ = new Subject();
 
-  const interval$ = timer(randomInterval(800, 1500)).pipe(
+  const interval$ = timer(randomBetween(700, 1800)).pipe(
     repeat(),
     scan((prev) => prev + 1, 0),
-    pausable(this.pause$)
+    pausable(this.pause$),
+    share()
   );
 
   const words$ = interval$.pipe(
     map((n) => ({
       game: this,
       $canvas: this.$canvas,
-      text: this.wordList[n],
+      text: this.textList[n],
       count: n,
     })),
     map((data) => {
       const rand = Math.random();
-      if (rand < 0.95) return new WordDrop(data);
+      if (rand < 0.94) return new WordDrop(data);
       if (rand < 0.98) return new BlueWordDrop(data);
       if (rand < 1) return new GoldenWordDrop(data);
     }),
-    startWith(this.words),
-    scan((words, newWord) => words.add(newWord.text, newWord))
+    scan((words, newWord) => words.add(newWord.text, newWord), this.words)
   );
 
   const submitEvent$ = fromEvent(this.$form, "submit");
@@ -114,7 +102,7 @@ Game.prototype.start = function () {
     withLatestFrom(words$),
     map(([input, words]) => words.hit(input)),
     tap((score) => {
-      score && keyboardEffect.play();
+      score && hitEffect.play();
       this.score$.next(this.score$.getValue() + score);
       this.$form.reset();
     })

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { body } from "express-validator";
 import { onValidationError } from "../middleware/index.js";
-export const gameRouter = (GameService, UserService) => {
+
+export const gameRouter = (GameService) => {
   const router = Router();
 
   // save game
@@ -14,20 +15,13 @@ export const gameRouter = (GameService, UserService) => {
     ],
     async (req, res, next) => {
       const { userName, score } = req.body;
-      let { id: userId } = await UserService.findByName(userName);
-      console.log(userName, score);
-      if (userId === -1) {
-        userId = await UserService.create(userName);
-      }
-
-      const created = await GameService.save({ userId, score });
-      return res.send(created);
+      const gameId = await GameService.saveByUserName({ userName, score });
+      return res.send(gameId);
     }
   );
 
   router.get("/ranking", async (req, res, next) => {
     const ranking = await GameService.getRanking();
-    console.log(ranking);
     return res.json(ranking);
   });
 

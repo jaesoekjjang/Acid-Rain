@@ -6,37 +6,27 @@ export const loadText = async (path) => {
   return text;
 };
 
+export const randomBetween = (min, max) => {
+  return min + Math.random() * (max - min);
+};
+
 export function pausable(pause$) {
   return (source) => {
-    const resume$ = pause$.pipe(takeUntil(source));
-
     return new Observable((observer) => {
       let paused = false;
 
-      const subscription = source.subscribe({
-        next(value) {
-          if (!paused) {
-            observer.next(value);
-          }
-        },
-        error(error) {
-          observer.error(error);
-        },
-        complete() {
-          observer.complete();
-        },
+      const subscription = source.subscribe((val) => {
+        if (paused) return;
+        observer.next(val);
       });
 
-      pause$.subscribe((pausedValue) => {
-        paused = pausedValue;
-      });
-
-      resume$.subscribe(() => {
-        paused = false;
-      });
+      const pauseSubscription = pause$.subscribe(
+        (pausedValue) => (paused = pausedValue)
+      );
 
       return () => {
         subscription.unsubscribe();
+        pauseSubscription.unsubscribe();
       };
     });
   };

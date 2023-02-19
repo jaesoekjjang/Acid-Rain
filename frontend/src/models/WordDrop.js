@@ -1,6 +1,8 @@
 import {
   delay,
+  distinctUntilChanged,
   exhaustMap,
+  filter,
   merge,
   mergeMap,
   switchMap,
@@ -25,7 +27,7 @@ export function WordDrop({ $canvas, game, text, count }) {
   this.y = 0;
 
   this.minSpeed = 2.5;
-  this.maxSpeed = 6.5;
+  this.maxSpeed = 6;
   this.speed = this.calcSpeed(count);
   this.pauseTimer;
 
@@ -57,12 +59,13 @@ WordDrop.prototype.getScore = function () {
   );
 };
 
-WordDrop.prototype.freeze = function (time = 3000) {
-  clearTimeout(this.pauseTimer);
-  const ogSpeed = this.speed;
+WordDrop.prototype.pause = function () {
   this.speed = 0;
-  this.pauseTimer = setTimeout(() => (this.speed = ogSpeed), time);
   return;
+};
+
+WordDrop.prototype.resume = function () {
+  this.speed = this.calcSpeed(this.count);
 };
 
 WordDrop.prototype.draw = function () {
@@ -94,25 +97,19 @@ export class BlueWordDrop extends WordDrop {
   color = "#097cfb";
 
   skill() {
-    // words.freeze(3000);
-    // pause$.next(true);
-
-    // pause$
-    //   .pipe(
-    //     mergeMap(() => timer(3000)),
-    //     take(1)
-    //   )
-    //   .subscribe((paused) => {
-    //     if (!paused) {
-    //       pause$.next(false);
-    //     }
-    //   });
     const { words, pause$ } = this.game;
-    pause$.pipe(switchMap(() => timer(WordDrop.PAUSE_TIME))).subscribe(() => {
+    const timer$ = pause$.pipe(
+      filter((val) => val),
+      switchMap(() => timer(WordDrop.PAUSE_TIME))
+    );
+
+    const subscription = timer$.subscribe(() => {
+      words.resume();
       pause$.next(false);
+      subscription.unsubscribe();
     });
 
-    words.freeze(WordDrop.PAUSE_TIME);
+    words.pause();
     pause$.next(true);
   }
 }

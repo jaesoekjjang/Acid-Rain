@@ -71,7 +71,7 @@ export class Component {
   mount($parent) {
     this.$parent = $parent;
     this.children = this.template();
-    if (this.children instanceof Component) {
+    if (!(this.children instanceof Element)) {
       throw new Error("하나 이상의 Element로 컴포넌트를 감싸야 합니다.");
     }
 

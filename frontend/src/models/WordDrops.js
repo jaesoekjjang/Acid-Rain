@@ -33,8 +33,12 @@ WordDrops.prototype.hit = function (key) {
   return score;
 };
 
-WordDrops.prototype.freeze = function (time) {
-  Object.values(this._drops.getValue()).forEach((d) => d.freeze(time));
+WordDrops.prototype.pause = function (time) {
+  Object.values(this._drops.getValue()).forEach((d) => d.pause(time));
+};
+
+WordDrops.prototype.resume = function (time) {
+  Object.values(this._drops.getValue()).forEach((d) => d.resume(time));
 };
 
 WordDrops.prototype.draw = function (ctx) {

@@ -1,6 +1,6 @@
 import mysql from "mysql2/promise";
 
-export default async () => {
+export const mysqlLoader = async () => {
   const { HOST, USER, PASSWORD, DATABASE } = process.env;
   const pool = mysql.createPool({
     host: HOST,
