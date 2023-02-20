@@ -4,7 +4,6 @@ import {
   tap,
   map,
   scan,
-  startWith,
   withLatestFrom,
   animationFrames,
   combineLatestWith,
@@ -41,11 +40,11 @@ export default function Game(textList, $canvas, $form) {
 
   this.$form = $form;
 
-  this.words = new WordDrops();
-
   this.score$ = new BehaviorSubject(0);
-  this.life = new Life();
-  this.life.subscribe((life) => life || this.over());
+  this.life$ = new Life();
+  this.life$.subscribe((life) => life || this.over());
+
+  this.words = new WordDrops();
 
   this.hitEffect = hitEffect;
 
@@ -66,32 +65,38 @@ Game.prototype = {
 Game.prototype.start = function () {
   this.ctx.clearRect(0, 0, this.$canvas.clientWidth, this.$canvas.clientHeight);
   this.textList.sort(() => Math.random() - 0.5);
-  this.life.reset();
+  this.life$.reset();
   this.score$.next(0);
 
-  this.pause$ = new Subject();
-
+  const pause$ = new Subject();
   const interval$ = timer(randomBetween(700, 1800)).pipe(
     repeat(),
     scan((prev) => prev + 1, 0),
-    pausable(this.pause$),
-    share()
+    share(),
+    pausable(pause$)
   );
 
   const words$ = interval$.pipe(
     map((n) => ({
-      game: this,
       $canvas: this.$canvas,
       text: this.textList[n],
       count: n,
+      hitEffect: this.hitEffect,
     })),
-    map((data) => {
+    scan((words, data) => {
       const rand = Math.random();
-      if (rand < 0.94) return new WordDrop(data);
-      if (rand < 0.98) return new BlueWordDrop(data);
-      if (rand < 1) return new GoldenWordDrop(data);
-    }),
-    scan((words, newWord) => words.add(newWord.text, newWord), this.words)
+      let newWord;
+
+      if (rand < 0.5) {
+        newWord = new WordDrop(data);
+      } else if (rand < 0.98) {
+        newWord = new BlueWordDrop({ words, pause$, ...data });
+      } else if (rand < 1) {
+        newWord = new GoldenWordDrop({ life$: this.life$, ...data });
+      }
+
+      return words.add(newWord.text, newWord);
+    }, new WordDrops())
   );
 
   const submitEvent$ = fromEvent(this.$form, "submit");
@@ -102,15 +107,13 @@ Game.prototype.start = function () {
     withLatestFrom(words$),
     map(([input, words]) => words.hit(input)),
     tap((score) => {
-      score && hitEffect.play();
       this.score$.next(this.score$.getValue() + score);
       this.$form.reset();
     })
   );
+  const wordsHitSubscription = wordsHit$.subscribe();
 
   const render$ = animationFrames().pipe(combineLatestWith(words$));
-
-  const wordsHitSubscription = wordsHit$.subscribe();
   const renderSubscription = render$.subscribe(([_, words]) => {
     this.ctx.clearRect(
       0,
@@ -120,7 +123,7 @@ Game.prototype.start = function () {
     );
 
     words.draw(this.ctx);
-    words.update(this.life);
+    words.update(this.life$);
   });
 
   this.subscriptions.push(wordsHitSubscription, renderSubscription);
@@ -135,7 +138,7 @@ Game.prototype.over = function () {
 };
 
 Game.prototype.getLifeStream = function () {
-  return this.life;
+  return this.life$;
 };
 
 Game.prototype.getScoreStream = function () {
@@ -143,8 +146,9 @@ Game.prototype.getScoreStream = function () {
 };
 
 Game.prototype.destroy = function () {
-  this.life.complete();
+  this.life$.complete();
   this.score$.complete();
+  this.pause$.complete();
   this.subscriptions.forEach((sub) => sub.unsubscribe());
   Game._instance = null;
 };

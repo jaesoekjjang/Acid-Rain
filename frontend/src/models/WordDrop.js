@@ -12,8 +12,7 @@ import {
   timer,
 } from "rxjs";
 
-export function WordDrop({ $canvas, game, text, count }) {
-  this.game = game;
+export function WordDrop({ $canvas, text, count, hitEffect }) {
   this.$canvas = $canvas;
   this.ctx = $canvas.getContext("2d");
 
@@ -25,19 +24,18 @@ export function WordDrop({ $canvas, game, text, count }) {
     textLength: text.length,
   });
   this.y = 0;
-
-  this.minSpeed = 2.5;
-  this.maxSpeed = 6;
-  this.speed = this.calcSpeed(count);
-  this.pauseTimer;
+  this.ogSpeed = WordDrop.speed(count);
+  this.crntSpeed = this.ogSpeed;
 
   this.color = "white";
   this.fontSize = 20;
+
+  this.hitEffect = hitEffect;
 }
 
-WordDrop.prototype.calcSpeed = function (n) {
-  const speed = Math.random() + this.minSpeed * 1.02 ** n;
-  return speed > this.maxSpeed ? this.maxSpeed : speed;
+WordDrop.speed = function (count) {
+  const speed = Math.random() + WordDrop.MIN_SPEED * 1.02 ** count;
+  return speed > WordDrop.maxSpeed ? WordDrop.maxSpeed : speed;
 };
 
 WordDrop.x = function ({ $canvas, fontSize, textLength }) {
@@ -46,26 +44,23 @@ WordDrop.x = function ({ $canvas, fontSize, textLength }) {
 
 WordDrop.prototype.hit = function () {
   this.skill();
+  this.hitEffect.play();
   return Math.ceil(this.getScore());
 };
 
 WordDrop.prototype.skill = function () {};
 
 WordDrop.prototype.getScore = function () {
-  return (
-    ((this.minSpeed + this.maxSpeed) / 2) * 40 +
-    this.text.length * 20 +
-    20 * 1.1 ** this.count
-  );
+  return this.ogSpeed * 40 + this.text.length * 20 + 20 * 1.1 ** this.count;
 };
 
 WordDrop.prototype.pause = function () {
-  this.speed = 0;
+  this.crntSpeed = 0;
   return;
 };
 
 WordDrop.prototype.resume = function () {
-  this.speed = this.calcSpeed(this.count);
+  this.crntSpeed = this.ogSpeed;
 };
 
 WordDrop.prototype.draw = function () {
@@ -76,7 +71,7 @@ WordDrop.prototype.draw = function () {
 };
 
 WordDrop.prototype.update = function () {
-  this.y += this.speed;
+  this.y += this.crntSpeed;
 };
 
 WordDrop.prototype.isAlive = function () {
@@ -87,32 +82,44 @@ WordDrop.prototype.isAlive = function () {
 export class GoldenWordDrop extends WordDrop {
   color = "#ffaf24";
 
+  constructor({ life$, ...props }) {
+    super(props);
+    this.life$ = life$;
+  }
+
   skill() {
-    const { life } = this.game;
-    life.increase();
+    this.life$.increase();
   }
 }
 
 export class BlueWordDrop extends WordDrop {
   color = "#097cfb";
 
+  constructor({ words, pause$, ...props }) {
+    super(props);
+    this.words = words;
+    this.pause$ = pause$;
+  }
+
   skill() {
-    const { words, pause$ } = this.game;
-    const timer$ = pause$.pipe(
+    const timer$ = this.pause$.pipe(
       filter((val) => val),
       switchMap(() => timer(WordDrop.PAUSE_TIME))
     );
 
     const subscription = timer$.subscribe(() => {
-      words.resume();
-      pause$.next(false);
+      this.words.resume();
+      this.pause$.next(false);
       subscription.unsubscribe();
     });
 
-    words.pause();
-    pause$.next(true);
+    this.words.pause();
+    this.pause$.next(true);
   }
 }
+
+WordDrop.MIN_SPEED = 2.5;
+WordDrop.MAX_SPEED = 6.5;
 
 WordDrop.COMMON = "common";
 WordDrop.GOLD = "gold";

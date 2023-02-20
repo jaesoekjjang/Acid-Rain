@@ -31,3 +31,31 @@ export function pausable(pause$) {
     });
   };
 }
+
+//TODO Validator
+// const score = 100;
+// const name = "jaesoek";
+
+// const nameValidation$ = of(name).pipe(
+//   mergeMap((value) =>
+//     iif(
+//       () => /\d/.test(value),
+//       of({ value }),
+//       of({ value, msg: "validation error" })
+//     )
+//   )
+// );
+
+// const scoreValidation$ = of(score).pipe(
+//   mergeMap((value) =>
+//     iif(
+//       () => /\d/.test(value),
+//       of({ value, error }),
+//       of({ value, msg: "validation error" })
+//     )
+//   )
+// );
+
+// const validation$ = combineLatest(nameValidation$, scoreValidation$).subscribe(
+//   console.log
+// );

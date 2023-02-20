@@ -1,62 +1,51 @@
-import { BehaviorSubject } from "rxjs";
-
 export function WordDrops() {
-  this._drops = new BehaviorSubject({});
+  this.drops = new Map();
 }
 
-WordDrops.prototype.add = function (key, value) {
-  this._drops.next({ ...this._drops.getValue(), [key]: value });
+WordDrops.prototype.add = function (text, drop) {
+  this.drops.set(text, drop);
   return this;
 };
 
-WordDrops.prototype.remove = function (key) {
-  const newValue = { ...this._drops.getValue() };
-  delete newValue[key];
-  this._drops.next(newValue);
+WordDrops.prototype.remove = function (text) {
+  this.drops.delete(text);
   return this;
 };
 
-WordDrops.prototype.has = function (key) {
-  const oldValue = this._drops.getValue();
-  if (oldValue.hasOwnProperty(key)) return true;
+WordDrops.prototype.hit = function (input) {
+  if (!this.drops.has(input)) return 0;
 
-  return false;
-};
-
-WordDrops.prototype.hit = function (key) {
-  if (!this.has(key)) return 0;
-
-  const wordDrop = this._drops.getValue()[key];
-  const score = wordDrop.hit();
-  this.remove(key);
+  const drop = this.drops.get(input);
+  const score = drop.hit();
+  this.drops.delete(input);
 
   return score;
 };
 
-WordDrops.prototype.pause = function (time) {
-  Object.values(this._drops.getValue()).forEach((d) => d.pause(time));
+WordDrops.prototype.pause = function () {
+  this.drops.forEach((drop) => drop.pause());
 };
 
-WordDrops.prototype.resume = function (time) {
-  Object.values(this._drops.getValue()).forEach((d) => d.resume(time));
+WordDrops.prototype.resume = function () {
+  this.drops.forEach((drop) => drop.resume());
 };
 
 WordDrops.prototype.draw = function (ctx) {
-  Object.values(this._drops.getValue()).forEach((d) => {
-    d.draw(ctx);
+  this.drops.forEach((drop) => {
+    drop.draw(ctx);
   });
 };
 
 WordDrops.prototype.update = function (life) {
-  Object.values(this._drops.getValue()).forEach((w) => {
-    w.update();
-    if (w.isAlive()) return;
+  this.drops.forEach((drop) => {
+    drop.update();
+    if (drop.isAlive()) return;
 
-    this.remove(w.text);
+    this.drops.delete(drop.text);
     life.decrease();
   });
 };
 
 WordDrops.prototype.clear = function () {
-  this._drops.next({});
+  this.drops.clear();
 };

@@ -21,20 +21,31 @@ export class Modal extends Component {
       createElement("div", { class: "modal" }, [
         createElement("form", { class: "modal-form" }, [
           createElement("div", null, [
-            createElement("input", {
-              class: "name-input",
-              type: "text",
-              name: "name",
-              type: "text",
-              placeholder: "이름",
-            }),
-            createElement("input", {
-              class: "score-input",
-              type: "text",
-              name: "score",
-              value: `${score} 점`,
-              disabled: true,
-            }),
+            createElement("div", { class: "input-row" }, [
+              createElement("input", {
+                class: "name-input",
+                type: "text",
+                name: "name",
+                type: "text",
+                placeholder: "이름(둘 이상의 문자와 숫자의 조합)",
+              }),
+              // createElement(
+              //   "span",
+              //   { class: "error" },
+              //   "2~15자의 문자 또는 문자와 숫자의 조합만 사용 가능합니다."
+              // ),
+            ]),
+            createElement(
+              "div",
+              { class: "input-row" },
+              createElement("input", {
+                class: "score-input",
+                type: "text",
+                name: "score",
+                value: `${score} 점`,
+                disabled: true,
+              })
+            ),
           ]),
           createElement(
             "div",
